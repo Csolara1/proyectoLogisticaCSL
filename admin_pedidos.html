@@ -25,7 +25,7 @@
                 <a href="admin_dashboard.html">📈 Dashboard</a>
                 <a href="admin_users.html">👤 Usuarios</a>
                 <a href="admin_pedidos.html" class="active-admin">📦 Gestión de Pedidos</a>
-                <a href="admin_stock.html">📊 Control de Stock</a>
+                <a href="admin_stock.html">📊 Stock</a>
                 <a href="admin_rutas.html">📍 Rutas y Flota</a>
                 <a href="admin_informes.html">📄 Informes</a>
             </nav>
@@ -35,8 +35,7 @@
             <h1>Gestión de Pedidos</h1>
 
             <div class="toolbar">
-                <button class="add-button" onclick="crearPedido()">➕ Nuevo Pedido</button>
-                
+                <button class="add-button solo-admin" onclick="crearPedido()">➕ Nuevo Pedido</button>                
                 <div class="search-container">
                     <input type="text" placeholder="Buscar pedido..." class="search-input">
                     <button class="search-button">Buscar</button>
@@ -71,8 +70,9 @@
     <script>
     document.addEventListener("DOMContentLoaded", () => {
         verificarSesion(); // <--- ¡Asegúrate de que esta línea ESTÉ y NO tenga // delante!
+        aplicarPermisosVisuales();
         cargarUsuarios();  // (o la función que corresponda a esa página)
     });
-</script>
+    </script>    
 </body>
 </html>

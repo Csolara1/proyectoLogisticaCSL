@@ -1,77 +1,91 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Rutas | Admin CSL</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css">
-</head>
-<body class="admin-body">
-
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body class="admin-body">
     <header>
-        <div class="logo">
-            <a href="index.html"><img src="assets/CSL_logo-removebg-preview.png" alt="Logo CSL" class="logo-img"></a>
-        </div>
-        <div class="user-info">
-            <span id="session-username">Admin CSL</span>
-            <button onclick="logout()" class="logout-button">Cerrar Sesión</button>
-        </div>
+      <div class="logo">
+        <a href="index.html"
+          ><img
+            src="assets/CSL_logo-removebg-preview.png"
+            alt="Logo CSL"
+            class="logo-img"
+        /></a>
+      </div>
+      <div class="user-info">
+        <span id="session-username">Admin CSL</span>
+        <button onclick="logout()" class="logout-button">Cerrar Sesión</button>
+      </div>
     </header>
 
     <div class="admin-main-wrapper">
-        <aside class="admin-sidebar">
-            <nav>
-                <a href="admin_dashboard.html">📈 Dashboard</a>
-                <a href="admin_users.html">👤 Usuarios</a>
-                <a href="admin_pedidos.html">📦 Pedidos</a>
-                <a href="admin_stock.html">📊 Stock</a>
-                <a href="admin_rutas.html" class="active-admin">📍 Rutas y Flota</a>
-                <a href="admin_informes.html">📄 Informes</a>
-            </nav>
-        </aside>
+      <aside class="admin-sidebar">
+        <nav>
+          <a href="admin_dashboard.html">📈 Dashboard</a>
+          <a href="admin_users.html">👤 Usuarios</a>
+          <a href="admin_pedidos.html">📦 Pedidos</a>
+          <a href="admin_stock.html">📊 Stock</a>
+          <a href="admin_rutas.html" class="active-admin">📍 Rutas y Flota</a>
+          <a href="admin_informes.html">📄 Informes</a>
+        </nav>
+      </aside>
 
-        <main class="admin-content">
-            <h1>Gestión de Vehículos y Rutas</h1>
+      <main class="admin-content">
+        <h1>Gestión de Vehículos y Rutas</h1>
 
-            <div class="toolbar">
-                <button class="add-button" onclick="crearVehiculo()">➕ Nuevo Vehículo</button>
-                
-                <div class="search-container">
-                    <input type="text" placeholder="Matrícula..." class="search-input">
-                    <button class="search-button">Buscar</button>
-                </div>
-            </div>
+        <div class="toolbar">
+          <button class="add-button solo-admin" onclick="crearVehiculo()">
+            ➕ Nuevo Vehículo
+          </button>
 
-            <div class="table-responsive">
-                <table class="data-table table">
-                    <thead>
-                        <tr>
-                            <th>Matrícula</th>
-                            <th>Conductor</th>
-                            <th>Estado</th>
-                            <th>Capacidad</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tabla-cuerpo-vehiculos">
-                        </tbody>
-                </table>
-            </div>
-        </main>
+          <div class="search-container">
+            <input
+              type="text"
+              placeholder="Matrícula..."
+              class="search-input"
+            />
+            <button class="search-button">Buscar</button>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="data-table table">
+            <thead>
+              <tr>
+                <th>Matrícula</th>
+                <th>Tipo</th>
+                <th>Conductor</th>
+                <th>Estado</th>
+                <th>Capacidad</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-cuerpo-vehiculos"></tbody>
+          </table>
+        </div>
+      </main>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/app.js"></script>
     <script src="js/vehicles.js"></script>
     <script>
-        document.addEventListener("DOMContentLoaded", cargarVehiculos);
+      document.addEventListener("DOMContentLoaded", cargarVehiculos);
     </script>
     <script>
-    document.addEventListener("DOMContentLoaded", () => {
+      document.addEventListener("DOMContentLoaded", () => {
         verificarSesion(); // <--- ¡Asegúrate de que esta línea ESTÉ y NO tenga // delante!
-        cargarUsuarios();  // (o la función que corresponda a esa página)
-    });
-</script>
-</body>
+        aplicarPermisosVisuales();
+        cargarUsuarios(); // (o la función que corresponda a esa página)
+      });
+    </script>
+  </body>
 </html>

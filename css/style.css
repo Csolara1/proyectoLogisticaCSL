@@ -1199,3 +1199,85 @@ footer {
 .download-btn:hover {
     background-color: #0056b3;
 }
+
+.tracking-timeline-container {
+    position: relative;
+    margin: 30px 0;
+    padding: 0 10px;
+}
+
+/* La línea gris de fondo */
+.progress-track {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    z-index: 0;
+}
+
+/* La línea de color que avanza */
+.progress-fill {
+    position: absolute;
+    top: 20px;
+    left: 0;
+    height: 4px;
+    background-color: #00a859; /* Verde CSL */
+    z-index: 0;
+    transition: width 0.5s ease;
+}
+
+/* Contenedor de los pasos (bolitas) */
+.steps-wrapper {
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+    z-index: 1; /* Encima de la línea */
+}
+
+.step-item {
+    text-align: center;
+    width: 25%; /* 4 pasos = 25% cada uno */
+}
+
+/* Círculo del paso (por defecto inactivo) */
+.step-circle {
+    width: 40px;
+    height: 40px;
+    background-color: white;
+    border: 2px solid #e9ecef;
+    border-radius: 50%;
+    margin: 0 auto 10px; /* Centrado */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    color: #ccc;
+    transition: all 0.3s;
+}
+
+.step-label {
+    font-size: 0.85rem;
+    color: #999;
+    font-weight: 500;
+}
+
+/* ESTADO ACTIVO (Cuando el paso se ha completado) */
+.step-item.active .step-circle {
+    border-color: #00a859;
+    background-color: #00a859;
+    color: white;
+    box-shadow: 0 0 0 4px rgba(0, 168, 89, 0.2); /* Brillo alrededor */
+}
+
+.step-item.active .step-label {
+    color: #333;
+    font-weight: bold;
+}
+
+/* Ajustes para la caja de ruta */
+.tracking-route-box {
+    background-color: #f8f9fa;
+    border: 1px solid #eee;
+    padding: 15px 25px;
+    border-radius: 8px;
+}

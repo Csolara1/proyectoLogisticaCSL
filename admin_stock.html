@@ -35,7 +35,7 @@
             <h1>Control de Stock (WMS)</h1>
 
             <div class="toolbar">
-                <button class="add-button" onclick="crearStock()">➕ Añadir Producto</button>
+                <button class="add-button solo-admin" onclick="crearStock()">➕ Añadir Producto</button>
                 
                 <div class="search-container">
                     <input type="text" placeholder="Referencia o almacén..." class="search-input">
@@ -70,6 +70,7 @@
     <script>
     document.addEventListener("DOMContentLoaded", () => {
         verificarSesion(); // <--- ¡Asegúrate de que esta línea ESTÉ y NO tenga // delante!
+        aplicarPermisosVisuales();
         cargarUsuarios();  // (o la función que corresponda a esa página)
     });
 </script>
