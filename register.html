@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Registro | CSL</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="login-body">
+    <div class="login-container">
+        <div class="login-header">
+            <img src="assets/CSL_logo-removebg-preview.png" alt="Logo CSL" class="logo-img">
+            <h1>Crear Cuenta Nueva</h1>
+        </div>
+        
+        <form id="registerForm" class="form-standard" onsubmit="event.preventDefault(); procesarRegistro();">
+            <label>Nombre Completo:</label>
+            <input type="text" id="reg-nombre" required>
+
+            <label>Email:</label>
+            <input type="email" id="reg-email" required>
+
+            <label>Teléfono (Opcional):</label>
+            <input type="tel" id="reg-phone">
+            
+            <label>Contraseña:</label>
+            <input type="password" id="reg-pass" required>
+            
+            <button type="submit" class="cta-button" style="background-color: #00a859;">Registrarse</button>
+        </form>
+        
+        <div class="login-links">
+            <p>¿Ya tienes cuenta? <a href="login.html">Inicia Sesión</a></p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/auth.js"></script>
+</body>
+</html>

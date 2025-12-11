@@ -1,0 +1,1201 @@
+/* Estilos generales */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    color: #333;
+    background-color: #f4f4f4;
+}
+
+/* Header/Navegación */
+header {
+    background-color: #5e35b1; /* Púrpura oscuro para confianza */
+    color: white;
+    padding: 15px 5%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    font-size: 1.5em;
+    font-weight: bold;
+}
+
+nav a {
+    color: white;
+    text-decoration: none;
+    margin-left: 20px;
+    transition: color 0.3s;
+}
+
+.cta-button {
+    background-color: #ec407a; /* Magenta brillante para el CTA */
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+/* Sección Hero (Principal) */
+.hero-section {
+    background-color: #7e57c2; /* Púrpura medio para el Hero */
+    color: white;
+    text-align: center;
+    padding: 100px 20px;
+}
+
+.hero-section h1 {
+    font-size: 2.5em;
+    margin-bottom: 10px;
+}
+
+.hero-section p {
+    font-size: 1.2em;
+    margin-bottom: 30px;
+}
+
+/* Formulario de Tracking */
+.tracking-form input[type="text"] {
+    padding: 15px;
+    width: 60%;
+    max-width: 400px;
+    border: none;
+    border-radius: 5px 0 0 5px;
+    font-size: 1em;
+}
+
+.tracking-form button {
+    padding: 15px 25px;
+    background-color: #5e35b1; /* Usa el púrpura del Header */
+    color: white;
+    border: none;
+    border-radius: 0 5px 5px 0;
+    cursor: pointer;
+    font-size: 1em;
+    margin-left: -4px;
+}
+
+/* Nueva Sección: Propuestas de Valor (Lo que agregué) */
+.value-props {
+    display: flex;
+    justify-content: space-around;
+    padding: 40px 5%;
+    background-color: white;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); /* Sombra sutil para destacarla */
+}
+
+.prop-item {
+    flex-basis: 30%; /* Distribuye los tres elementos */
+    text-align: center;
+    padding: 20px;
+    border-left: 1px solid #ddd; /* Separador sutil */
+}
+
+.prop-item:first-child {
+    border-left: none; /* Quita el separador del primer elemento */
+}
+
+.prop-item h2 {
+    color: #5e35b1; /* Púrpura en los títulos */
+    font-size: 1.4em;
+    margin-top: 0;
+}
+
+.prop-item p {
+    color: #666;
+    font-size: 0.95em;
+}
+
+
+/* Servicios (Ejemplo de sección inferior) */
+.services-preview {
+    padding: 50px 5%;
+    text-align: center;
+}
+
+/* Footer */
+footer {
+    background-color: #333;
+    color: white;
+    text-align: center;
+    padding: 20px;
+}
+
+.logo-img {
+    /* Define un tamaño máximo para que se vea bien en la barra de navegación */
+    height: 100px; /* Ajusta este valor si tu logo es más alto o más bajo */
+    width: auto;
+    vertical-align: middle; /* Alineación vertical */
+    margin-top: -20px;
+    margin-bottom: -20px;
+    margin-left: -40px;
+}
+
+/* El .logo DIV ya no necesita un tamaño de fuente grande, pero lo mantenemos como contenedor */
+.logo {
+    /* Eliminamos el 'font-size' anterior si estaba definido solo para el texto */
+    display: flex;
+    align-items: center;
+}
+
+footer {
+    background-color: #333;
+    color: white;
+    padding: 40px 5%;
+}
+
+.footer-container {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap; /* Para que funcione bien en móviles */
+    max-width: 1200px; /* Limita el ancho del contenido */
+    margin: 0 auto;
+}
+
+.footer-column {
+    flex-basis: 22%; 
+    padding: 10px 0;
+}
+
+.footer-logo {
+    height: 100px; 
+    margin-bottom: -15px;
+    filter: invert(100%);
+}
+
+.footer-column h3 {
+    color: #ec407a; /* Usamos el color de acento púrpura/magenta */
+    font-size: 1.1em;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #444;
+    padding-bottom: 5px;
+}
+
+.footer-column ul {
+    list-style: none;
+    padding: 0;
+}
+
+.footer-column ul li a {
+    color: #ccc;
+    text-decoration: none;
+    line-height: 1.8;
+    transition: color 0.3s;
+}
+
+.footer-column ul li a:hover {
+    color: #fff;
+}
+
+.copyright-text {
+    font-size: 0.8em;
+    color: #999;
+    margin-top: 20px;
+}
+
+/* Estilos básicos para la información de contacto */
+.footer-column p {
+    margin: 5px 0;
+    color: #ccc;
+}
+
+/* ------------------------------------ */
+/* ESTILOS ESPECÍFICOS PARA SERVICIOS */
+/* ------------------------------------ */
+
+/* Page Hero Small (Título de las páginas secundarias) */
+.page-hero-small {
+    background-color: #f0f0f0; /* Fondo gris claro */
+    color: #333;
+    text-align: center;
+    padding: 60px 20px 40px;
+    border-bottom: 3px solid #7e57c2; /* Línea de acento púrpura */
+}
+
+.hero-content-small h1 {
+    font-size: 2em;
+    margin-bottom: 10px;
+    color: #5e35b1; /* Púrpura oscuro */
+}
+
+.hero-content-small p {
+    max-width: 800px;
+    margin: 0 auto;
+    font-size: 1.1em;
+}
+
+/* Estilos de los Bloques de Servicio */
+.service-details {
+    padding: 60px 5%;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.service-details h2 {
+    text-align: center;
+    color: #5e35b1;
+    margin-bottom: 40px;
+    font-size: 2.2em;
+}
+
+.service-block {
+    display: flex;
+    align-items: center;
+    gap: 40px;
+    margin-bottom: 60px;
+    padding: 30px;
+    background-color: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border-radius: 8px;
+}
+
+.service-block.reverse-layout {
+    flex-direction: row-reverse; /* Invierte el orden para el diseño en zig-zag */
+}
+
+.service-icon {
+    font-size: 4em;
+    flex-shrink: 0;
+    width: 150px;
+    text-align: center;
+}
+
+.service-text h3 {
+    color: #ec407a; /* Magenta de acento */
+    margin-top: 0;
+    font-size: 1.8em;
+}
+
+.service-text ul {
+    list-style: none;
+    padding: 0;
+    margin-top: 15px;
+}
+
+.service-text ul li {
+    margin-bottom: 8px;
+    color: #555;
+}
+
+.highlight {
+    font-weight: bold;
+    color: #333;
+}
+
+.service-cta {
+    display: inline-block;
+    background-color: #5e35b1;
+    color: white;
+    text-decoration: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    margin-top: 15px;
+    transition: background-color 0.3s;
+}
+
+.service-cta-right{
+    float: right;
+    display: inline-block;
+    background-color: #5e35b1;
+    color: white;
+    text-decoration: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    margin-top: 15px;
+    transition: background-color 0.3s;
+}
+
+.service-cta-right:hover {
+    background-color: #7e57c2;
+}
+
+.service-cta:hover {
+    background-color: #7e57c2;
+}
+
+/* ------------------------------------ */
+/* SERVICIOS DE VALOR AÑADIDO (Parte inferior) */
+/* ------------------------------------ */
+.value-added-services {
+    background-color: #f8f8f8;
+    padding: 60px 5%;
+    text-align: center;
+}
+
+.value-added-services h2 {
+    color: #5e35b1;
+    margin-bottom: 30px;
+}
+
+.value-blocks {
+    display: flex;
+    justify-content: space-around;
+    gap: 30px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.value-item {
+    flex-basis: 30%;
+    padding: 25px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: white;
+    transition: transform 0.3s;
+}
+
+.value-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.value-item h4 {
+    color: #ec407a;
+    font-size: 1.3em;
+    margin-top: 0;
+}
+
+/* ------------------------------------ */
+/* CONTACTO.HTML STYLES */
+/* ------------------------------------ */
+
+.contact-grid {
+    display: flex;
+    gap: 40px;
+    padding: 60px 5%;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.contact-form-column,
+.contact-info-column {
+    flex-basis: 50%;
+}
+
+.contact-form-column h2 {
+    color: #5e35b1; /* Púrpura de CSL */
+    margin-top: 0;
+    margin-bottom: 25px;
+}
+
+/* Estilos generales para formularios */
+.form-standard label {
+    display: block;
+    font-weight: bold;
+    margin-top: 15px;
+    margin-bottom: 5px;
+    color: #333;
+}
+
+.form-standard input[type="text"],
+.form-standard input[type="email"],
+.form-standard input[type="tel"],
+.form-standard textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-size: 1em;
+}
+
+.form-standard textarea {
+    resize: vertical; /* Permite redimensionar verticalmente */
+}
+
+/* Estilos de la información de contacto */
+.contact-info-column h2 {
+    color: #ec407a; /* Magenta de acento */
+    margin-top: 0;
+    margin-bottom: 25px;
+}
+
+.info-block {
+    margin-bottom: 30px;
+    padding: 15px;
+    border-left: 4px solid #7e57c2; /* Barra lateral púrpura */
+    background-color: #f9f9f9;
+}
+
+.info-block h3 {
+    margin-top: 0;
+    font-size: 1.2em;
+    color: #5e35b1;
+}
+
+.map-placeholder {
+    height: 250px;
+    background-color: #ddd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+    border-radius: 4px;
+    margin-top: 20px;
+}
+
+.error-message {
+    color: red;
+    font-size: 0.9em;
+    margin-top: 10px;
+}
+
+/* ------------------------------------ */
+/* LOGIN.HTML STYLES */
+/* ------------------------------------ */
+
+.login-body {
+    background-color: #f4f4f4; /* Fondo claro general */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+}
+
+.login-container {
+    background-color: white;
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px; /* Tamaño fijo para el formulario */
+    text-align: center;
+}
+
+.login-header {
+    margin-bottom: 25px;
+}
+
+.login-logo {
+    height: 150px; 
+    width: auto;
+    margin-bottom: -30px;
+}
+
+.login-container h1 {
+    font-size: 1.8em;
+    color: #5e35b1;
+}
+
+.login-links {
+    margin-top: 20px;
+    font-size: 0.9em;
+}
+
+.login-links a {
+    color: #7e57c2;
+    text-decoration: none;
+}
+
+.login-links a:hover {
+    text-decoration: underline;
+}
+
+.social-login {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+}
+
+.social-login p {
+    color: #666;
+    margin-bottom: 10px;
+}
+
+.google-auth-button {
+    background-color: #db4437; /* Color de Google */
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    width: 100%;
+    font-weight: bold;
+}
+
+.back-to-home {
+    display: block;
+    margin-top: 35px;
+    color: #7e57c2;
+    text-decoration: none;
+    font-size: 0.9em;
+}
+
+/* ------------------------------------ */
+/* ESTILOS GENERALES DE ADMIN */
+/* ------------------------------------ */
+
+.admin-body {
+    background-color: #f4f4f9; /* Fondo muy claro para el panel */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    font-size: 0.9em;
+}
+
+.logout-button {
+    color: white;
+    text-decoration: none;
+    background-color: #ec407a; /* Magenta de acento */
+    padding: 6px 12px;
+    border-radius: 4px;
+    margin-left: 15px;
+    transition: background-color 0.3s;
+}
+
+.logout-button:hover {
+    background-color: #d81b60;
+}
+
+/* ------------------------------------ */
+/* WRAPPER Y SIDEBAR */
+/* ------------------------------------ */
+
+.admin-main-wrapper {
+    display: flex;
+    min-height: calc(100vh - 60px); /* Ocupa el resto de la altura */
+}
+
+.admin-sidebar {
+    width: 250px;
+    background-color: #fff;
+    padding-top: 20px;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
+    flex-shrink: 0;
+}
+
+.admin-sidebar nav a {
+    display: block;
+    padding: 12px 20px;
+    color: #333;
+    text-decoration: none;
+    border-left: 4px solid transparent;
+    transition: all 0.2s;
+}
+
+.admin-sidebar nav a:hover {
+    background-color: #f0f0f5;
+    color: #5e35b1;
+}
+
+.admin-sidebar nav a.active-admin {
+    background-color: #e0e0f0;
+    border-left-color: #5e35b1; /* Púrpura de CSL para el activo */
+    font-weight: bold;
+    color: #5e35b1;
+}
+
+.sidebar-logout {
+    margin-top: 30px;
+    border-top: 1px solid #eee;
+    padding-top: 15px !important;
+    color: #ec407a !important;
+}
+
+/* ------------------------------------ */
+/* CONTENIDO PRINCIPAL */
+/* ------------------------------------ */
+
+.admin-content {
+    flex-grow: 1;
+    padding: 30px;
+}
+
+.admin-content h1 {
+    color: #333;
+    margin-top: 0;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 10px;
+}
+
+.section-description {
+    color: #666;
+    margin-bottom: 25px;
+}
+
+/* ------------------------------------ */
+/* DASHBOARD STYLES */
+/* ------------------------------------ */
+
+.dashboard-metrics {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 40px;
+}
+
+.metric-card {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+    flex-basis: 33.33%;
+    text-align: center;
+}
+
+.metric-card h3 {
+    color: #7e57c2;
+    margin-top: 0;
+    font-size: 1.1em;
+}
+
+.metric-number {
+    font-size: 2.5em;
+    font-weight: bold;
+    color: #5e35b1;
+}
+
+.log-area {
+    width: 100%;
+    border: 1px solid #ddd;
+    background-color: #222; /* Fondo oscuro para simular consola */
+    color: #00ff88; /* Texto verde neon */
+    font-family: 'Consolas', monospace;
+    padding: 15px;
+    font-size: 0.9em;
+    resize: none;
+    border-radius: 4px;
+}
+
+/* ------------------------------------ */
+/* GESTIÓN DE TABLAS (admin_users.html) */
+/* ------------------------------------ */
+
+.toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.add-button {
+    background-color: #00a859; /* Verde para Añadir/Aceptar */
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+.add-button:hover {
+    background-color: #008a4c;
+}
+
+.search-input {
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px 0 0 4px;
+}
+
+.search-button {
+    background-color: #7e57c2;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 0 4px 4px 0;
+    cursor: pointer;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: white;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.data-table th, .data-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+.data-table th {
+    background-color: #5e35b1;
+    color: white;
+    font-weight: normal;
+}
+
+.data-table tr:nth-child(even) {
+    background-color: #f8f8f8;
+}
+
+.data-table tr:hover {
+    background-color: #f1f1f1;
+}
+
+.edit-btn, .delete-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    margin-right: 5px;
+    font-size: 1.1em;
+    transition: opacity 0.2s;
+}
+
+.delete-btn {
+    color: #c0392b; /* Rojo para Borrar */
+}
+
+.delete-btn.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.admin-login-link {
+    /* Estilo discreto para el enlace de acceso */
+    margin-left: 20px;
+    font-weight: bold;
+    color: #ec407a !important; /* Usamos el color de acento */
+}
+
+.admin-login-link:hover {
+    text-decoration: underline;
+}
+
+/* ------------------------------------ */
+/* RUTAS.HTML STYLES */
+/* ------------------------------------ */
+
+.global-map-section {
+    padding: 60px 5%;
+    text-align: center;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.global-map-section h2 {
+    color: #5e35b1;
+    font-size: 2.2em;
+    margin-bottom: 20px;
+}
+
+/* Estilo para el contenedor del mapa */
+.map-visual {
+    background-color: #f0f0f5; /* Un color de fondo para simular el mapa */
+    border: 3px solid #000000;
+    border-radius: 8px;
+    height: 450px; /* Tamaño grande para el mapa */
+    margin: 30px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #7e57c2;
+    font-weight: bold;
+    font-size: 1.5em;
+    overflow: hidden; /* Oculta la parte del texto que se genera con la imagen, dejando solo la imagen */
+}
+
+.coverage-summary {
+    max-width: 900px;
+    margin: 0 auto 50px;
+    padding: 20px;
+    background-color: #f8f8f8;
+    border-left: 5px solid #ec407a; /* Barra de acento magenta */
+    text-align: left;
+    font-size: 1.1em;
+}
+
+/* Detalle de Cobertura por Modalidad */
+.route-details-section {
+    background-color: #fff;
+    padding: 40px 5%;
+    max-width: 1200px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.route-details-section h2 {
+    color: #333;
+    margin-bottom: 40px;
+}
+
+.route-details-section > div {
+    display: flex;
+    justify-content: space-around;
+    gap: 30px;
+}
+
+.route-block {
+    flex-basis: 30%;
+    padding: 25px;
+    border-radius: 8px;
+    border: 1px solid #eee;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s;
+}
+
+.route-block:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.route-icon {
+    font-size: 3em;
+    margin-bottom: 15px;
+    color: #5e35b1;
+}
+
+.route-block h3 {
+    color: #ec407a;
+    font-size: 1.4em;
+    margin-bottom: 10px;
+}
+
+.view-route-details {
+    display: block;
+    margin-top: 15px;
+    color: #7e57c2;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.view-route-details:hover {
+    text-decoration: underline;
+}
+
+/* Estilo para la CTA Final */
+.cta-banner {
+    background-color: #5e35b1; /* Fondo púrpura */
+    color: white;
+    text-align: center;
+    padding: 60px 20px;
+    margin-top: 40px;
+}
+
+.cta-banner h2 {
+    color: white;
+    margin-bottom: 15px;
+}
+
+.large-cta {
+    padding: 15px 30px;
+    font-size: 1.2em;
+    background-color: #ec407a; /* Magenta brillante para el botón */
+}
+
+.large-cta:hover {
+    background-color: #d81b60;
+}
+
+.map-visual img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Asegura que la imagen cubra todo el div */
+    border-radius: 8px; 
+}
+
+/* ------------------------------------ */
+/* PRESUPUESTO.HTML STYLES (Multi-Step Form) */
+/* ------------------------------------ */
+
+.quote-form-section {
+    padding: 40px 5%;
+    max-width: 800px;
+    margin: 0 auto 60px;
+}
+
+.multi-step-form {
+    background-color: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden; /* Oculta los pasos que no están activos */
+}
+
+/* Oculta todos los fieldsets por defecto (solo JS los mostrará, pero los configuramos) */
+.form-step {
+    border: none;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    /* Estilos para ocultar y animar, que se controlarán con JS */
+    display: none; 
+}
+
+/* El paso activo es visible */
+.form-step.active-step {
+    display: block;
+}
+
+.form-step legend {
+    font-size: 1.6em;
+    font-weight: bold;
+    color: #5e35b1;
+    margin-bottom: 25px;
+    padding-bottom: 5px;
+    border-bottom: 2px solid #eee;
+    width: 100%;
+}
+
+.multi-step-form label {
+    /* Reutiliza estilos de .form-standard label */
+    display: block;
+    font-weight: bold;
+    margin-top: 15px;
+    margin-bottom: 5px;
+    color: #333;
+}
+
+.multi-step-form input[type="text"],
+.multi-step-form input[type="number"],
+.multi-step-form input[type="email"],
+.multi-step-form input[type="tel"],
+.multi-step-form select {
+    /* Reutiliza estilos de .form-standard input */
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-size: 1em;
+}
+
+/* Botones de navegación dentro del formulario */
+.prev-step-btn,
+.next-step-btn {
+    background-color: #7e57c2;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 30px;
+    transition: background-color 0.3s;
+}
+
+.prev-step-btn {
+    background-color: #6c757d; /* Gris para el botón de retroceso */
+    margin-right: 15px;
+}
+
+.prev-step-btn:hover {
+    background-color: #5a6268;
+}
+
+.next-step-btn:hover {
+    background-color: #5e35b1;
+}
+
+.final-submit {
+    /* Utiliza la clase cta-button base */
+    float: right;
+}
+
+/* Estilos para los checkboxes */
+.checkbox-group {
+    display: flex;
+    gap: 20px;
+    margin-top: 10px;
+}
+
+.checkbox-group input[type="checkbox"] {
+    width: auto;
+}
+
+/* ------------------------------------ */
+/* ECOMMERCE.HTML STYLES */
+/* ------------------------------------ */
+
+.ecommerce-services {
+    padding: 60px 5%;
+    max-width: 1200px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.ecommerce-services h2 {
+    color: #5e35b1;
+    margin-bottom: 40px;
+}
+
+.feature-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 30px;
+    justify-content: center;
+}
+
+.feature-item {
+    flex-basis: calc(50% - 15px); /* Dos columnas */
+    background-color: #f8f8f8;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    text-align: left;
+    border: solid #5e35b1;
+}
+
+.feature-icon {
+    font-size: 2.5em;
+    color: #ec407a;
+    margin-bottom: 15px;
+}
+
+.feature-item h3 {
+    color: #333;
+    margin-top: 0;
+    font-size: 1.5em;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 5px;
+}
+
+/* Sección de Integración (CTA) */
+.integration-cta {
+    background-color: #5e35b1; /* Púrpura */
+    color: white;
+    text-align: center;
+    padding: 50px 20px;
+    margin-top: 40px;
+}
+
+.integration-cta h2 {
+    color: white;
+    margin-bottom: 10px;
+}
+
+/* Sección de Testimonio */
+.testimonial-section {
+    padding: 60px 5%;
+    background-color: #f4f4f9;
+    text-align: center;
+}
+
+.quote-box {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 30px;
+    background-color: white;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+}
+
+.quote-box blockquote {
+    font-size: 1.3em;
+    color: #555;
+    line-height: 1.6;
+    margin-bottom: 15px;
+    position: relative;
+}
+
+.quote-box cite {
+    display: block;
+    font-style: italic;
+    color: #7e57c2;
+    margin-top: 10px;
+}
+
+/* ------------------------------------ */
+/* ESTILOS ESPECÍFICOS DE ADMIN CONTENT */
+/* ------------------------------------ */
+
+/* Ya existe .admin-body, .admin-header, .admin-main-wrapper, .admin-sidebar, .admin-content */
+
+/* Estilos de las tablas y botones (reutilizados pero con ajustes finos) */
+
+.data-table {
+    /* Ya definidos, pero asegúrate de que se ven bien en las nuevas páginas */
+    width: 100%;
+    border-collapse: collapse;
+    background-color: white;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-top: 20px;
+}
+
+/* ------------------------------------ */
+/* INFORMES Y FACTURAS (admin_informes.html) */
+/* ------------------------------------ */
+
+.report-generation-section {
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+    margin-bottom: 30px;
+}
+
+.report-generation-section h2 {
+    color: #ec407a; /* Magenta de acento */
+    margin-top: 0;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+}
+
+.report-generation-section .form-standard {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    align-items: end;
+}
+
+.report-generation-section label {
+    grid-column: span 2; /* Las etiquetas ocupan dos columnas */
+}
+
+.report-generation-section select,
+.report-generation-section input[type="date"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-size: 1em;
+}
+
+.report-generation-section select {
+    grid-column: span 2;
+}
+
+.date-inputs {
+    grid-column: span 2;
+    display: flex;
+    gap: 15px;
+}
+
+.date-inputs input {
+    flex-grow: 1;
+}
+
+.report-generation-section .final-submit {
+    grid-column: span 2; /* El botón ocupa el ancho completo */
+    background-color: #5e35b1;
+    padding: 12px 20px;
+    margin-top: 10px;
+}
+
+.report-generation-section .final-submit:hover {
+    background-color: #4a2d8a;
+}
+
+.download-btn {
+    background-color: #007bff; /* Azul para la descarga */
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: background-color 0.3s;
+}
+
+.download-btn:hover {
+    background-color: #0056b3;
+}

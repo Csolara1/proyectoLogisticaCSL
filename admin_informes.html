@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Informes | Admin CSL</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="admin-body">
+
+    <header>
+        <div class="logo">
+            <a href="index.html"><img src="assets/CSL_logo-removebg-preview.png" alt="Logo CSL" class="logo-img"></a>
+        </div>
+        <div class="user-info">
+            <span id="session-username">Admin CSL</span>
+            <button onclick="logout()" class="logout-button">Cerrar Sesión</button>
+        </div>
+    </header>
+
+    <div class="admin-main-wrapper">
+        <aside class="admin-sidebar">
+            <nav>
+                <a href="admin_dashboard.html">📈 Dashboard</a>
+                <a href="admin_users.html">👤 Usuarios</a>
+                <a href="admin_pedidos.html">📦 Pedidos</a>
+                <a href="admin_stock.html">📊 Stock</a>
+                <a href="admin_rutas.html">📍 Rutas y Flota</a>
+                <a href="admin_informes.html" class="active-admin">📄 Informes</a>
+            </nav>
+        </aside>
+
+        <main class="admin-content">
+            <h1>Generación de Informes</h1>
+            
+            <div class="report-generation-section card p-4">
+                <h2 class="h4 mb-3" style="color:#ec407a;">Exportar Datos</h2>
+                <form class="form-standard" onsubmit="event.preventDefault(); mostrarPopup('Informes', 'Funcionalidad de descarga en desarrollo.', 'info');">
+                    <div class="mb-3">
+                        <label class="form-label">Tipo de Informe:</label>
+                        <select class="form-select">
+                            <option>Resumen Mensual de Pedidos</option>
+                            <option>Inventario Valorizado</option>
+                            <option>Actividad de Usuarios</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Rango de Fechas:</label>
+                        <div class="d-flex gap-2">
+                            <input type="date" class="form-control">
+                            <input type="date" class="form-control">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="cta-button w-100" style="background-color: #5e35b1;">Generar PDF</button>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+    document.addEventListener("DOMContentLoaded", () => {
+        verificarSesion(); // <--- ¡Asegúrate de que esta línea ESTÉ y NO tenga // delante!
+        cargarUsuarios();  // (o la función que corresponda a esa página)
+    });
+</script>
+</body>
+</html>
