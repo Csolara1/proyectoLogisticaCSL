@@ -1,35 +1,68 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <title>Acceso | CSL</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css">
-</head>
-<body class="login-body">
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body class="login-body">
     <div class="login-container">
-        <div class="login-header">
-            <img src="assets/CSL_logo-removebg-preview.png" alt="Logo CSL" class="logo-img">
-            <h1>Acceso al Sistema</h1>
+      <div class="login-header">
+        <img
+          src="assets/CSL_logo-removebg-preview.png"
+          alt="Logo CSL"
+          class="logo-img"
+        />
+        <h1>Acceso al Sistema</h1>
+      </div>
+      <form
+        id="loginForm"
+        class="form-standard"
+        onsubmit="event.preventDefault(); procesarLogin();"
+      >
+        <label>Usuario (Email):</label>
+        <input type="email" id="usuario" required class="form-control mb-3" />
+
+        <label>Contraseña:</label>
+        <input
+          type="password"
+          id="contraseña"
+          required
+          class="form-control mb-1"
+        />
+
+        <div class="text-end mb-4">
+          <a
+            href="forgot_password.html"
+            class="text-decoration-none small text-muted"
+          >
+            ¿Olvidaste tu contraseña?
+          </a>
         </div>
-        <form id="loginForm" class="form-standard" onsubmit="event.preventDefault(); procesarLogin();">
-            <label>Usuario (Email):</label>
-            <input type="email" id="usuario" required>
-            
-            <label>Contraseña:</label>
-            <input type="password" id="contraseña" required>
-            
-            <button type="submit" class="cta-button">Iniciar Sesión</button>
-        </form>
-        
-        <div class="login-links">
-            <p>¿No tienes cuenta? <a href="register.html">Regístrate aquí</a></p>
-            <a href="index.html">← Volver a Inicio</a>
-        </div>
+
+        <button type="submit" class="cta-button w-100">
+          <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
+        </button>
+      </form>
+
+      <div class="login-links mt-3 text-center">
+        <p>¿No tienes cuenta? <a href="register.html">Regístrate aquí</a></p>
+        <a href="index.html" class="text-decoration-none"
+          ><i class="bi bi-arrow-left"></i> Volver a Inicio</a
+        >
+      </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/app.js"></script>
     <script src="js/auth.js"></script>
-</body>
+  </body>
 </html>

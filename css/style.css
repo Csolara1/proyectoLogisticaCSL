@@ -130,8 +130,7 @@ footer {
     width: auto;
     vertical-align: middle; /* Alineación vertical */
     margin-top: -20px;
-    margin-bottom: -20px;
-    margin-left: -40px;
+    margin-bottom: -10px;
 }
 
 /* El .logo DIV ya no necesita un tamaño de fuente grande, pero lo mantenemos como contenedor */
@@ -1280,4 +1279,51 @@ footer {
     border: 1px solid #eee;
     padding: 15px 25px;
     border-radius: 8px;
+}
+
+.input-group {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    align-items: stretch;
+    width: 100%;
+    margin-bottom: 15px; /* Espacio entre campos */
+}
+
+/* 2. Estilo del cuadradito del icono (izquierda) */
+.input-group-text {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 45px; /* Ancho fijo para que todos se alineen igual */
+    background-color: #f0f2f5; /* Gris clarito */
+    border: 1px solid #ced4da;
+    border-right: none; /* Quitamos borde derecho para que se una al input */
+    color: #5e35b1; /* Iconos color morado corporativo */
+}
+
+/* 3. Estilo del campo de texto (derecha) */
+.input-group .form-control {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    border: 1px solid #ced4da;
+    border-left: none; /* Quitamos borde izquierdo para unirlo al icono */
+    box-shadow: none !important; /* Quitamos sombras azules de Bootstrap */
+}
+
+/* 4. Efecto al hacer clic (Foco) */
+.input-group:focus-within {
+    box-shadow: 0 0 0 0.25rem rgba(94, 53, 177, 0.25);
+    border-radius: 0.375rem;
+}
+
+.input-group:focus-within .input-group-text,
+.input-group:focus-within .form-control {
+    border-color: #5e35b1; /* Borde morado al escribir */
+}
+
+/* Asegurar que las etiquetas no empujen */
+.login-container label {
+    margin-bottom: 5px;
+    display: block;
+    color: #333;
 }
