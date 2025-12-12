@@ -1,81 +1,91 @@
 //
 
-// --- TARIFAS CONFIGURABLES ---
-const TARIFAS = {
-    'MARITIMO': { base: 50, costeKg: 0.50, nombre: 'Marítimo' },
-    'TERRESTRE': { base: 30, costeKg: 1.20, nombre: 'Terrestre' },
-    'AEREO': { base: 100, costeKg: 8.50, nombre: 'Aéreo' }
-};
+// Asegúrate de que API_BASE_URL está definida (suele venir de app.js)
+// Si no, descomenta la siguiente línea:
+// const API_BASE_URL = "http://localhost:8080/api";
 
-// --- 1. FUNCIÓN DE CÁLCULO EN VIVO ---
 function calcularPrecio() {
-    const mode = document.getElementById('transportMode').value;
-    const weight = parseFloat(document.getElementById('weight').value);
+    const modo = document.getElementById('transportMode').value;
+    const peso = parseFloat(document.getElementById('weight').value);
     const box = document.getElementById('price-box');
     const priceText = document.getElementById('final-price');
-    const detailsText = document.getElementById('price-details');
+    const details = document.getElementById('price-details');
 
-    // Si no hay peso válido, ocultamos la caja
-    if (!weight || weight <= 0) {
+    if (!peso || peso <= 0) {
         box.style.display = 'none';
         return;
     }
 
-    // Mostramos la caja
+    let tarifaBase = 0;
+    let multiplicador = 0;
+
+    switch(modo) {
+        case 'MARITIMO': tarifaBase = 50; multiplicador = 0.5; break; // Barato
+        case 'TERRESTRE': tarifaBase = 20; multiplicador = 1.2; break; // Medio
+        case 'AEREO': tarifaBase = 100; multiplicador = 5.0; break; // Caro
+    }
+
+    const precioFinal = tarifaBase + (peso * multiplicador);
+    
+    // Mostramos resultado
     box.style.display = 'block';
-
-    // Cálculo matemático
-    const tarifa = TARIFAS[mode];
-    const costeTotal = tarifa.base + (weight * tarifa.costeKg);
-
-    // Actualizamos el HTML (con 2 decimales)
-    priceText.innerText = `${costeTotal.toFixed(2)} €`;
-    detailsText.innerText = `Tarifa ${tarifa.nombre}: Base ${tarifa.base}€ + ${weight}kg x ${tarifa.costeKg}€/kg`;
+    priceText.innerText = precioFinal.toFixed(2) + " €";
+    details.innerText = `${modo}: ${peso}kg x tarifa`;
 }
 
-// --- 2. FUNCIÓN DE ENVÍO A LA API ---
 async function enviarPresupuesto() {
-    // Recoger datos
-    const transportMode = document.getElementById('transportMode').value;
-    const weight = document.getElementById('weight').value;
     const email = document.getElementById('clientEmail').value;
-    
-    // Validaciones
-    if (!weight || weight <= 0) {
-        mostrarPopup("Faltan datos", "Por favor, introduce un peso válido.", "error");
+    const modo = document.getElementById('transportMode').value;
+    const peso = document.getElementById('weight').value;
+    const precio = document.getElementById('final-price').innerText;
+    const btn = document.querySelector('.cta-button');
+
+    if (!email || !email.includes('@')) {
+        mostrarPopup("Falta Email", "Por favor, introduce un correo válido para enviarte el presupuesto.", "warning");
         return;
     }
-    if (!email || !email.includes('@')) {
-        mostrarPopup("Faltan datos", "Necesitamos tu email para enviarte la oferta.", "error");
+    if (!peso || peso <= 0) {
+        mostrarPopup("Error", "Calcula el precio primero.", "error");
         return;
     }
 
-    // Objeto para enviar al Backend (Java)
-    const quoteData = {
-        transportMode: transportMode,
-        weightKg: parseFloat(weight),
-        contactEmail: email, // <--- Nuevo campo importante
-        isProcessed: false
-    };
+    // Efecto de carga
+    const txtOriginal = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Enviando...';
+    btn.disabled = true;
 
     try {
-        const response = await fetch(`${API_BASE_URL}/quotes`, {
+        const response = await fetch(`${API_BASE_URL}/quotes/send`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(quoteData)
+            body: JSON.stringify({
+                email: email,
+                transporte: modo,
+                peso: peso,
+                precio: precio
+            })
         });
 
         if (response.ok) {
-            // Éxito
-            mostrarPopup("Solicitud Enviada", "¡Hemos recibido tu petición! Un agente revisará el precio estimado y te contactará a " + email, "success");
-            
-            // Limpiar formulario
-            document.getElementById('quoteForm').reset();
-            document.getElementById('price-box').style.display = 'none';
+            mostrarPopup(
+                "¡Presupuesto Enviado!", 
+                `<div class="text-center">
+                    <i class="bi bi-send-check-fill text-success" style="font-size:3rem;"></i>
+                    <p class="mt-2">Hemos enviado los detalles a <b>${email}</b>.</p>
+                </div>`, 
+                "success"
+            );
+            // Limpiar
+            document.getElementById('clientEmail').value = '';
         } else {
-            mostrarPopup("Error", "Hubo un problema al enviar la solicitud.", "error");
+            mostrarPopup("Error", "No se pudo enviar el correo.", "error");
         }
-    } catch (error) {
-        mostrarPopup("Error de conexión", error.message, "error");
+
+    } catch (e) {
+        console.error(e);
+        mostrarError("Error de conexión con el servidor.");
+    } finally {
+        btn.innerHTML = txtOriginal;
+        btn.disabled = false;
     }
 }
