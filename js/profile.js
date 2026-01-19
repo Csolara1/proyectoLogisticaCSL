@@ -1,5 +1,3 @@
-//
-
 // Cargar datos del usuario logueado
 async function cargarDatosPerfil() {
     const usuarioLocal = obtenerUsuario(); // Recuperamos del localStorage
@@ -49,6 +47,14 @@ async function cargarDatosPerfil() {
             if (inputEmail) inputEmail.value = user.userEmail || '';
             if (inputPhone) inputPhone.value = user.mobilePhone || ''; 
 
+            // --- NUEVO: Actualizamos también el estado del 2FA al cargar datos ---
+            if (user.isTwoFactorEnabled !== undefined) {
+                actualizarBadge2FA(user.isTwoFactorEnabled);
+                // Actualizamos también el localStorage para tener el dato fresco
+                usuarioLocal.is2fa = user.isTwoFactorEnabled;
+                localStorage.setItem('usuario_csl', JSON.stringify(usuarioLocal));
+            }
+
         } else {
             throw new Error("No se encontró tu usuario en la base de datos.");
         }
@@ -97,13 +103,15 @@ async function actualizarPerfil() {
             mostrarPopup("Perfil Actualizado", "Tus datos se han guardado correctamente.", "success");
             
             // Actualizamos la memoria local con los datos nuevos
-            // (Si la API devuelve el objeto nuevo, lo usamos. Si no, usamos lo que enviamos)
             let nuevoUsuario = null;
             try {
                 nuevoUsuario = await response.json();
             } catch(e) {
-                nuevoUsuario = datosActualizar; // Fallback si la API no devuelve JSON al editar
+                nuevoUsuario = datosActualizar; // Fallback
             }
+            
+            // Mantenemos el estado del 2FA que ya teníamos
+            nuevoUsuario.is2fa = usuarioLocal.is2fa;
 
             localStorage.setItem('usuario_csl', JSON.stringify(nuevoUsuario));
             
@@ -122,3 +130,110 @@ async function actualizarPerfil() {
         mostrarError("Error de red: " + e.message);
     }
 }
+
+// --- LÓGICA 2FA (Autenticación en 2 Pasos) ---
+
+function actualizarBadge2FA(activo) {
+    const badge = document.getElementById('badge-2fa');
+    const btn = document.getElementById('btn-toggle-2fa');
+    
+    // Si no existen los elementos (ej: estamos en otra página), no hacemos nada
+    if (!badge || !btn) return;
+
+    if (activo) {
+        badge.className = 'badge bg-success';
+        badge.innerText = 'ACTIVADO';
+        
+        btn.className = 'btn btn-outline-danger';
+        btn.innerText = 'Desactivar 2FA';
+        btn.onclick = desactivar2FA; // Asignamos la función de desactivar
+    } else {
+        badge.className = 'badge bg-secondary';
+        badge.innerText = 'Desactivado';
+        
+        btn.className = 'btn btn-outline-primary';
+        btn.innerText = 'Activar 2FA';
+        btn.onclick = iniciarSetup2FA; // Asignamos la función de activar
+    }
+}
+
+async function iniciarSetup2FA() {
+    const user = obtenerUsuario();
+    try {
+        // 1. Pedir secreto y URL del QR al backend
+        const res = await fetch(`${API_BASE_URL}/auth/setup-2fa`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: user.userId })
+        });
+        const data = await res.json();
+
+        // 2. Mostrar QR
+        const qrImage = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(data.qrUrl)}`;
+
+        mostrarPopup(
+            "Configurar Google Authenticator",
+            `<div class="text-center">
+                <p>1. Escanea este código con tu app:</p>
+                <img src="${qrImage}" class="img-thumbnail mb-3">
+                <p>2. Introduce el código de 6 dígitos que aparece:</p>
+                <input type="text" id="input-code-2fa" class="form-control text-center fs-4 letter-spacing-2" placeholder="000 000" maxlength="6">
+                <button class="btn btn-success w-100 mt-3" onclick="confirmarActivacion2FA('${data.secret}')">Verificar y Activar</button>
+            </div>`,
+            "info"
+        );
+    } catch (e) { mostrarError("Error iniciando 2FA: " + e.message); }
+}
+
+async function confirmarActivacion2FA(secret) {
+    const user = obtenerUsuario();
+    const code = document.getElementById('input-code-2fa').value;
+    
+    try {
+        const res = await fetch(`${API_BASE_URL}/auth/confirm-2fa`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: user.userId, secret: secret, code: code })
+        });
+
+        if (res.ok) {
+            mostrarPopup("¡Éxito!", "Autenticación en 2 Pasos activada.", "success");
+            // Actualizamos localstorage
+            user.is2fa = true;
+            localStorage.setItem('usuario_csl', JSON.stringify(user));
+            actualizarBadge2FA(true);
+        } else {
+            mostrarPopup("Error", "Código incorrecto. Inténtalo de nuevo.", "error");
+        }
+    } catch (e) { mostrarError("Error de conexión"); }
+}
+
+async function desactivar2FA() {
+    const user = obtenerUsuario();
+    mostrarConfirmacion("¿Desactivar 2FA?", "Tu cuenta será menos segura.", async () => {
+        try {
+            const res = await fetch(`${API_BASE_URL}/auth/disable-2fa`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: user.userId })
+            });
+            if (res.ok) {
+                user.is2fa = false;
+                localStorage.setItem('usuario_csl', JSON.stringify(user));
+                actualizarBadge2FA(false);
+                mostrarPopup("Desactivado", "Se ha quitado el 2FA.", "success");
+            }
+        } catch(e) { mostrarError("Error al desactivar."); }
+    });
+}
+
+// --- INICIALIZACIÓN ---
+// Esto es lo que faltaba: Ejecutar al cargar la página para pintar el estado del botón
+document.addEventListener("DOMContentLoaded", () => {
+    const user = obtenerUsuario();
+    if (user) {
+        // Usamos la propiedad 'is2fa' o 'isTwoFactorEnabled' según como la hayamos guardado
+        const estado2FA = user.is2fa || user.isTwoFactorEnabled || false;
+        actualizarBadge2FA(estado2FA);
+    }
+});

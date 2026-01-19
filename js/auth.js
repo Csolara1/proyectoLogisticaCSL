@@ -7,10 +7,7 @@ async function procesarLogin() {
     const email = document.getElementById('usuario').value;
     const pass = document.getElementById('contraseña').value;
 
-    if (!email || !pass) {
-        mostrarPopup("Atención", "Por favor, rellena todos los campos.", "error");
-        return;
-    }
+    if (!email || !pass) return mostrarPopup("Error", "Faltan datos", "error");
 
     try {
         const response = await fetch(`${API_BASE_URL}/auth/login`, {
@@ -21,19 +18,64 @@ async function procesarLogin() {
 
         if (response.ok) {
             const data = await response.json();
+
+            // --- CASO 1: REQUIERE 2FA ---
+            if (data.status === "2FA_REQUIRED") {
+                pedirCodigo2FA(data.userId); // <--- NUEVA FUNCIÓN
+                return; 
+            }
+
+            // --- CASO 2: LOGIN NORMAL ---
             localStorage.setItem('usuario_csl', JSON.stringify(data));
-            
-            mostrarPopup("¡Bienvenido!", "Acceso concedido. Redirigiendo...", "success");
+            mostrarPopup("¡Bienvenido!", "Acceso concedido.", "success");
             setTimeout(() => { window.location.href = 'admin_dashboard.html'; }, 1500);
+
         } else {
-            // Si el error es por cuenta inactiva (403), el backend mandará el mensaje
-            const errorTxt = await response.text();
-            mostrarPopup("Error de Acceso", errorTxt || "Usuario o contraseña incorrectos.", "error");
+            const txt = await response.text();
+            mostrarPopup("Error", txt, "error");
         }
-    } catch (error) {
-        console.error(error);
-        mostrarError("Error de conexión con el servidor.");
+    } catch (error) { mostrarError("Error de conexión"); }
+}
+
+// --- NUEVAS FUNCIONES AUXILIARES PARA EL LOGIN ---
+function pedirCodigo2FA(userId) {
+    // Cerramos el modal anterior si hubiera
+    const modalPrevio = document.getElementById('modal-universal');
+    if (modalPrevio) {
+        const bsModal = bootstrap.Modal.getInstance(modalPrevio);
+        if(bsModal) bsModal.hide();
     }
+
+    mostrarPopup(
+        "Verificación de Seguridad",
+        `<div class="text-center">
+            <i class="bi bi-shield-lock text-primary" style="font-size:3rem;"></i>
+            <p class="mt-2">Introduce el código de tu Google Authenticator</p>
+            <input type="text" id="login-2fa-code" class="form-control text-center fs-4 mb-3" placeholder="000000" maxlength="6">
+            <button class="btn btn-primary w-100" onclick="validarLogin2FA(${userId})">Verificar</button>
+        </div>`,
+        "primary"
+    );
+}
+
+async function validarLogin2FA(userId) {
+    const code = document.getElementById('login-2fa-code').value;
+    try {
+        const res = await fetch(`${API_BASE_URL}/auth/verify-2fa`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: userId.toString(), code: code })
+        });
+
+        if (res.ok) {
+            const data = await res.json();
+            localStorage.setItem('usuario_csl', JSON.stringify(data));
+            mostrarPopup("¡Verificado!", "Código correcto.", "success");
+            setTimeout(() => { window.location.href = 'admin_dashboard.html'; }, 1000);
+        } else {
+            mostrarPopup("Error", "Código incorrecto.", "error");
+        }
+    } catch (e) { mostrarError("Error validando 2FA"); }
 }
 
 // --- REGISTRO (CON CONFIRMACIÓN DE CORREO) ---

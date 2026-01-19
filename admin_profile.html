@@ -1,93 +1,183 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Mi Perfil | Admin CSL</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="css/style.css">
-</head>
-<body class="admin-body">
-
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body class="admin-body">
     <header>
-        <div class="logo"><a href="index.html"><img src="assets/CSL_logo-removebg-preview.png" alt="Logo CSL" class="logo-img"></a></div>
-        <div class="user-info">
-            <span id="session-username">Usuario</span>
-            <button onclick="logout()" class="logout-button">Cerrar Sesión</button>
-        </div>
+      <div class="logo">
+        <a href="index.html"
+          ><img
+            src="assets/CSL_logo-removebg-preview.png"
+            alt="Logo CSL"
+            class="logo-img"
+        /></a>
+      </div>
+      <div class="user-info">
+        <span id="session-username">Usuario</span>
+        <button onclick="logout()" class="logout-button">Cerrar Sesión</button>
+      </div>
     </header>
 
     <div class="admin-main-wrapper">
-        <aside class="admin-sidebar">
-            <nav>
-                <a href="admin_dashboard.html"><i class="bi bi-speedometer2"></i> Dashboard</a>
-                <a href="admin_users.html"><i class="bi bi-people-fill"></i> Usuarios</a>
-                <a href="admin_pedidos.html"><i class="bi bi-box-seam-fill"></i> Pedidos</a>
-                <a href="admin_stock.html"><i class="bi bi-bar-chart-line-fill"></i> Stock</a>
-                <a href="admin_rutas.html"><i class="bi bi-geo-alt-fill"></i> Rutas y Flota</a>
-                <a href="admin_informes.html"><i class="bi bi-file-earmark-text-fill"></i> Informes</a>
-                <a href="admin_profile.html" class="active-admin mt-3 border-top pt-3">
-                    <i class="bi bi-person-circle"></i> Mi Perfil
-                </a>
-            </nav>
-        </aside>
+      <aside class="admin-sidebar">
+        <nav>
+          <a href="admin_dashboard.html"
+            ><i class="bi bi-speedometer2"></i> Dashboard</a
+          >
+          <a href="admin_users.html"
+            ><i class="bi bi-people-fill"></i> Usuarios</a
+          >
+          <a href="admin_pedidos.html"
+            ><i class="bi bi-box-seam-fill"></i> Pedidos</a
+          >
+          <a href="admin_stock.html"
+            ><i class="bi bi-bar-chart-line-fill"></i> Stock</a
+          >
+          <a href="admin_rutas.html"
+            ><i class="bi bi-geo-alt-fill"></i> Rutas y Flota</a
+          >
+          <a href="admin_informes.html"
+            ><i class="bi bi-file-earmark-text-fill"></i> Informes</a
+          >
+          <a
+            href="admin_profile.html"
+            class="active-admin mt-3 border-top pt-3"
+          >
+            <i class="bi bi-person-circle"></i> Mi Perfil
+          </a>
+        </nav>
+      </aside>
 
-        <main class="admin-content">
-            <h1>Mi Perfil</h1>
-            
-            <div class="row">
-                <div class="col-md-8">
-                    <div class="card p-4 shadow-sm">
-                        <h4 class="mb-4 text-primary"><i class="bi bi-person-vcard"></i> Datos Personales</h4>
-                        
-                        <form id="profileForm" onsubmit="event.preventDefault(); actualizarPerfil();">
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">Nombre Completo:</label>
-                                <input type="text" id="profileName" class="form-control">
-                            </div>
+      <main class="admin-content">
+        <h1>Mi Perfil</h1>
 
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">Email (No editable):</label>
-                                <input type="email" id="profileEmail" class="form-control bg-light" readonly>
-                            </div>
+        <div class="row">
+          <div class="col-md-8">
+            <div class="card p-4 shadow-sm">
+              <h4 class="mb-4 text-primary">
+                <i class="bi bi-person-vcard"></i> Datos Personales
+              </h4>
 
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">Teléfono Móvil:</label>
-                                <input type="tel" id="profilePhone" class="form-control" placeholder="+34 600 000 000">
-                            </div>
-
-                            <hr class="my-4">
-                            <h5 class="mb-3 text-danger"><i class="bi bi-shield-lock"></i> Seguridad</h5>
-
-                            <div class="mb-3">
-                                <label class="form-label">Nueva Contraseña (Dejar en blanco para no cambiar):</label>
-                                <input type="password" id="profilePass" class="form-control" placeholder="********">
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Confirmar Nueva Contraseña:</label>
-                                <input type="password" id="profilePassConfirm" class="form-control" placeholder="********">
-                            </div>
-
-                            <button type="submit" class="cta-button w-100 mt-3" style="background-color: #5e35b1;">
-                                <i class="bi bi-save"></i> Guardar Cambios
-                            </button>
-                        </form>
-                    </div>
+              <form
+                id="profileForm"
+                onsubmit="event.preventDefault(); actualizarPerfil();"
+              >
+                <div class="mb-3">
+                  <label class="form-label fw-bold">Nombre Completo:</label>
+                  <input type="text" id="profileName" class="form-control" />
                 </div>
+
+                <div class="mb-3">
+                  <label class="form-label fw-bold">Email (No editable):</label>
+                  <input
+                    type="email"
+                    id="profileEmail"
+                    class="form-control bg-light"
+                    readonly
+                  />
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-label fw-bold">Teléfono Móvil:</label>
+                  <input
+                    type="tel"
+                    id="profilePhone"
+                    class="form-control"
+                    placeholder="+34 600 000 000"
+                  />
+                </div>
+
+                <hr class="my-4" />
+                <h5 class="mb-3 text-danger">
+                  <i class="bi bi-shield-lock"></i> Seguridad
+                </h5>
+
+                <div class="mb-3">
+                  <label class="form-label"
+                    >Nueva Contraseña (Dejar en blanco para no cambiar):</label
+                  >
+                  <input
+                    type="password"
+                    id="profilePass"
+                    class="form-control"
+                    placeholder="********"
+                  />
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-label">Confirmar Nueva Contraseña:</label>
+                  <input
+                    type="password"
+                    id="profilePassConfirm"
+                    class="form-control"
+                    placeholder="********"
+                  />
+                </div>
+
+                <hr class="my-4" />
+                <h5 class="mb-3 text-primary">
+                  <i class="bi bi-shield-check"></i> Autenticación en 2 Pasos
+                  (2FA)
+                </h5>
+
+                <div class="card bg-light border-0 p-3">
+                  <div
+                    class="d-flex justify-content-between align-items-center"
+                  >
+                    <div>
+                      <p class="mb-1 fw-bold">Estado actual:</p>
+                      <span id="badge-2fa" class="badge bg-secondary"
+                        >Cargando...</span
+                      >
+                    </div>
+                    <button
+                      id="btn-toggle-2fa"
+                      type="button"
+                      class="btn btn-outline-primary"
+                    >
+                      <span class="spinner-border spinner-border-sm"></span>
+                    </button>
+                  </div>
+                  <p class="small text-muted mt-2 mb-0">
+                    Protege tu cuenta pidiendo un código de Google Authenticator
+                    al iniciar sesión.
+                  </p>
+                </div>
+
+                <button
+                  type="submit"
+                  class="cta-button w-100 mt-3"
+                  style="background-color: #5e35b1"
+                >
+                  <i class="bi bi-save"></i> Guardar Cambios
+                </button>
+              </form>
             </div>
-        </main>
+          </div>
+        </div>
+      </main>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/app.js"></script>
     <script src="js/profile.js"></script>
     <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            verificarSesion();
-            cargarDatosPerfil();
-        });
+      document.addEventListener("DOMContentLoaded", () => {
+        verificarSesion();
+        cargarDatosPerfil();
+      });
     </script>
-</body>
+  </body>
 </html>
