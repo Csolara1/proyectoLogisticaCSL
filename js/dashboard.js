@@ -1,4 +1,4 @@
-//
+// js/dashboard.js COMPLETO Y CORREGIDO
 
 document.addEventListener("DOMContentLoaded", () => {
     // 1. Verificamos quién está entrando
@@ -88,9 +88,7 @@ async function cargarLogsReales() {
 }
 
 async function inicializarGraficosAdmin() {
-    // Carga los gráficos globales (Donut y Barras) igual que antes
-    // ... (Código original de gráficos admin) ...
-    // Para no alargar, reutilizamos la lógica de fetch global:
+    // Carga los gráficos globales (Donut y Barras)
     try {
         const resOrders = await fetch(`${API_BASE_URL}/orders`);
         if (resOrders.ok) {
@@ -112,7 +110,6 @@ async function inicializarGraficosAdmin() {
 
 function adaptarDashboardUsuario(usuario) {
     // 1. Ocultar tarjetas que no le importan (Usuarios y Stock)
-    // Buscamos las tarjetas por el ID del número y ocultamos su PADRE (la tarjeta entera)
     const cardUsers = document.getElementById('metric-users').closest('.metric-card');
     const cardStock = document.getElementById('metric-stock').closest('.metric-card');
     
@@ -123,20 +120,19 @@ function adaptarDashboardUsuario(usuario) {
     const cardOrders = document.getElementById('metric-orders').closest('.metric-card');
     if(cardOrders) {
         cardOrders.querySelector('h3').innerText = "Mis Pedidos Activos";
-        // La hacemos más ancha para que ocupe el espacio vacío
         cardOrders.style.width = "100%"; 
         cardOrders.style.maxWidth = "400px";
     }
 
-    // 3. Ocultar sección de Logs (Los usuarios no deben ver errores del sistema)
+    // 3. Ocultar sección de Logs
     const sectionLogs = document.querySelector('.dashboard-activity');
     if(sectionLogs) sectionLogs.style.display = 'none';
 
-    // 4. Ocultar Gráfico de Stock (No les interesa)
+    // 4. Ocultar Gráfico de Stock
     const chartStockCanvas = document.getElementById('chartStock');
     if(chartStockCanvas) {
         const cardChartStock = chartStockCanvas.closest('.card');
-        if(cardChartStock) cardChartStock.parentElement.style.display = 'none'; // Ocultamos la columna entera
+        if(cardChartStock) cardChartStock.parentElement.style.display = 'none'; 
     }
     
     // 5. Ajustar el título principal
@@ -181,6 +177,10 @@ async function responseToArray(response) {
 }
 
 function pintarDonutPedidos(orders, canvasId) {
+    // --- [NUEVO] PROTECCIÓN ANTI-ERROR SI NO HAY COOKIES ---
+    // Si Chart no está definido (porque rechazamos cookies), salimos sin hacer nada.
+    if (typeof Chart === 'undefined') return;
+
     let pendientes = 0, enProceso = 0, enviados = 0, entregados = 0;
     orders.forEach(o => {
         const st = (o.status || '').toUpperCase();
@@ -207,6 +207,9 @@ function pintarDonutPedidos(orders, canvasId) {
 }
 
 function pintarBarrasStock(stockItems, canvasId) {
+    // --- [NUEVO] PROTECCIÓN ANTI-ERROR SI NO HAY COOKIES ---
+    if (typeof Chart === 'undefined') return;
+
     const conteoAlmacen = {}; 
     ['MAD-01', 'MAD-02', 'MAD-03', 'MAD-04', 'MAD-05'].forEach(almacen => { conteoAlmacen[almacen] = 0; });
 

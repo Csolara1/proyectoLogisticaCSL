@@ -10,7 +10,22 @@ function esAdmin() {
     return user && user.roleId === 1;
 }
 
+function cerrarModalesYBackdrop() {
+    const modales = document.querySelectorAll('.modal.show');
+    modales.forEach(m => {
+        const instance = bootstrap.Modal.getInstance(m);
+        if (instance) instance.hide();
+    });
+    const backdrops = document.querySelectorAll('.modal-backdrop');
+    backdrops.forEach(b => b.remove());
+    document.body.classList.remove('modal-open');
+    document.body.style.overflow = '';
+}
+
 function mostrarPopup(titulo, mensaje, tipo = 'info') {
+
+    cerrarModalesYBackdrop();
+
     let modalId = 'modal-universal';
     let modalHtml = document.getElementById(modalId);
 

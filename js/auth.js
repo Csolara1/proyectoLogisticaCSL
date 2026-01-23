@@ -58,8 +58,31 @@ function pedirCodigo2FA(userId) {
     );
 }
 
+function pedirCodigo2FA(userId) {
+    cerrarModalesYBackdrop(); // Limpiar residuos
+
+    mostrarPopup(
+        "Verificación de Seguridad",
+        `<div class="text-center">
+            <i class="bi bi-shield-lock text-primary" style="font-size:3rem;"></i>
+            <p class="mt-2">Introduce el código de tu Google Authenticator</p>
+            <div id="error-2fa" class="alert alert-danger d-none" style="font-size: 0.9rem;"></div>
+            
+            <input type="text" id="login-2fa-code" class="form-control text-center fs-4 mb-3" placeholder="000000" maxlength="6">
+            <button id="btn-verificar-2fa" class="btn btn-primary w-100" onclick="validarLogin2FA(${userId})">Verificar</button>
+        </div>`,
+        "primary"
+    );
+}
+
 async function validarLogin2FA(userId) {
-    const code = document.getElementById('login-2fa-code').value;
+    const codeInput = document.getElementById('login-2fa-code');
+    const errorDiv = document.getElementById('error-2fa');
+    const btn = document.getElementById('btn-verificar-2fa');
+    const code = codeInput.value;
+
+    if (!code) return;
+
     try {
         const res = await fetch(`${API_BASE_URL}/auth/verify-2fa`, {
             method: 'POST',
@@ -70,12 +93,49 @@ async function validarLogin2FA(userId) {
         if (res.ok) {
             const data = await res.json();
             localStorage.setItem('usuario_csl', JSON.stringify(data));
-            mostrarPopup("¡Verificado!", "Código correcto.", "success");
-            setTimeout(() => { window.location.href = 'admin_dashboard.html'; }, 1000);
+            cerrarModalesYBackdrop();
+            mostrarPopup("¡Bienvenido!", "Acceso concedido.", "success");
+            setTimeout(() => { window.location.href = 'admin_dashboard.html'; }, 1500);
         } else {
-            mostrarPopup("Error", "Código incorrecto.", "error");
+            const mensajeError = await res.text();
+            
+            // Si el servidor responde con error (401 o 423)
+            errorDiv.innerText = mensajeError;
+            errorDiv.classList.remove('d-none'); // Mostramos el error en el modal
+            codeInput.value = ""; // Limpiamos el código para reintentar
+            
+            // Si el estado es 423 (Bloqueado), desactivamos el botón y obligamos a recargar
+            if (res.status === 423) {
+                btn.disabled = true;
+                codeInput.disabled = true;
+                setTimeout(() => {
+                    cerrarModalesYBackdrop();
+                    window.location.reload(); // Recarga para volver al login de email/pass
+                }, 3000);
+            }
         }
-    } catch (e) { mostrarError("Error validando 2FA"); }
+    } catch (e) {
+        mostrarError("Error de conexión");
+    }
+}
+
+// Función auxiliar para limpiar los residuos de los modales de Bootstrap
+function cerrarModalesYBackdrop() {
+    // Buscar todos los modales abiertos y ocultarlos
+    const modales = document.querySelectorAll('.modal.show');
+    modales.forEach(m => {
+        const instance = bootstrap.Modal.getInstance(m);
+        if (instance) instance.hide();
+    });
+
+    // Eliminar manualmente el fondo oscuro (backdrop) que causa el efecto "apagado"
+    const backdrops = document.querySelectorAll('.modal-backdrop');
+    backdrops.forEach(b => b.remove());
+    
+    // Devolver el scroll al cuerpo de la página
+    document.body.classList.remove('modal-open');
+    document.body.style.overflow = '';
+    document.body.style.paddingRight = '';
 }
 
 // --- REGISTRO (CON CONFIRMACIÓN DE CORREO) ---
