@@ -139,6 +139,7 @@ function cerrarModalesYBackdrop() {
 }
 
 // --- REGISTRO (CON CONFIRMACIÓN DE CORREO) ---
+// --- REGISTRO (CON CONFIRMACIÓN DE CORREO Y VALIDACIÓN MÓVIL) ---
 async function procesarRegistro() {
     const nombre = document.getElementById('regNombre').value;
     const email = document.getElementById('regEmail').value;
@@ -146,23 +147,36 @@ async function procesarRegistro() {
     const pass = document.getElementById('regPass').value;
     const passConfirm = document.getElementById('regPassConfirm').value;
 
+    // 1. Validación básica de campos vacíos
     if (!nombre || !email || !pass) {
         mostrarPopup("Faltan datos", "Todos los campos son obligatorios.", "error");
         return;
     }
 
+    // 2. CORRECCIÓN FINAL: VALIDACIÓN DE MÓVIL ESPAÑOL (Requisito Obligatorio)
+    // Acepta formatos como: 600123456, +34 600..., 0034 700...
+    const regexMovilES = /^(\+34|0034|34)?[67]\d{8}$/;
+    
+    // Eliminamos espacios en blanco para comprobar el número limpio
+    if (!regexMovilES.test(movil.replace(/\s/g, ''))) { 
+        mostrarPopup("Formato Incorrecto", "El teléfono debe ser un móvil español válido (empieza por 6 o 7).", "warning");
+        return;
+    }
+
+    // 3. Validación de contraseñas coincidentes
     if (pass !== passConfirm) {
         mostrarPopup("Error", "Las contraseñas no coinciden.", "error");
         return;
     }
 
+    // Objeto a enviar al backend
     const nuevoUsuario = {
         fullName: nombre,
         userEmail: email,
         userPassword: pass,
         mobilePhone: movil,
-        roleId: 2,
-        isActive: false // Se crea inactivo esperando confirmación
+        roleId: 2, // Por defecto creamos clientes (Rol 2)
+        isActive: false // Se crea inactivo esperando confirmación por email
     };
 
     try {
@@ -173,7 +187,7 @@ async function procesarRegistro() {
         });
 
         if (response.ok) {
-            // MENSAJE IMPORTANTE: Revisar correo
+            // Éxito: Avisamos de que revise el correo
             mostrarPopup(
                 "¡Registro Recibido!", 
                 `<div class="text-center">
@@ -184,12 +198,13 @@ async function procesarRegistro() {
                 "success"
             );
             
-            // Limpiar formulario
+            // Limpiamos el formulario para que quede bonito
             document.getElementById('registerForm').reset();
             
         } else {
+            // Error del servidor (ej: "El email ya existe")
             const errorTxt = await response.text();
-            mostrarPopup("Error", errorTxt, "error");
+            mostrarPopup("Error en el registro", errorTxt, "error");
         }
     } catch (error) {
         console.error(error);

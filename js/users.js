@@ -141,19 +141,53 @@ function abrirModalEditar(id) {
 
 function solicitarBorrado(id) {
     if (!esAdmin()) return mostrarError("⛔ Solo admin.");
-    const user = usuariosCargados.find(u => u.userId === id);
     
-    // Doble chequeo de seguridad (aunque el botón esté oculto)
+    const user = usuariosCargados.find(u => u.userId === id);
+    if (!user) return;
+
+    // 1. Protección Frontend (Visual)
     if (user.userEmail === 'admin@csl.com' || user.fullName === 'Super Admin') {
-        mostrarPopup("Acción Prohibida", "No puedes eliminar al Super Administrador principal.", "error");
+        mostrarPopup("Acción Prohibida", "Por seguridad, no puedes eliminar al Super Administrador principal desde la interfaz web.", "error");
         return;
     }
 
-    mostrarConfirmacionSegura("¿Eliminar Usuario?", `Vas a eliminar a <b>${user.fullName}</b>.`, user.userEmail, async () => {
-        try {
-            const response = await fetch(`${API_BASE_URL}/users/${id}`, { method: 'DELETE' });
-            if(response.ok) { mostrarPopup("Eliminado", "Usuario borrado.", "success"); cargarUsuarios(); }
-            else mostrarError("No se pudo eliminar.");
-        } catch(e) { mostrarError(e.message); }
-    });
+    // 2. Confirmación Segura (Cumple requisito de borrado no mecánico [cite: 80, 81])
+    mostrarConfirmacionSegura(
+        "¿Eliminar Usuario?", 
+        `Vas a eliminar a <b>${user.fullName}</b>.<br>Esta acción es irreversible.`, 
+        user.userEmail, // Palabra clave obligatoria
+        async () => {
+            try {
+                const response = await fetch(`${API_BASE_URL}/users/${id}`, { method: 'DELETE' });
+
+                if (response.ok) {
+                    mostrarPopup("Eliminado", "El usuario ha sido borrado correctamente.", "success");
+                    cargarUsuarios();
+                } else {
+                    // --- AQUÍ ESTÁ LA CORRECCIÓN DE LÓGICA ---
+                    const errorText = await response.text();
+                    
+                    if (response.status === 409) {
+                        // CUMPLE REQUISITO: Avisar si tiene relación con otras tablas
+                        mostrarPopup(
+                            "No se puede eliminar", 
+                            `Conflictos de datos: <b>Este usuario tiene pedidos o registros asociados.</b><br>
+                             El sistema impide el borrado para mantener la integridad de la base de datos. 
+                             Debes borrar sus pedidos antes de eliminar al usuario.`, 
+                            "warning"
+                        );
+                    } else if (response.status === 400 || response.status === 403) {
+                        // CUMPLE REQUISITO: Protección del último admin
+                        mostrarPopup("Operación Denegada", `El servidor rechazó la operación (Posiblemente sea el último administrador activo).<br><i>Detalle: ${errorText}</i>`, "error");
+                    } else {
+                        // Otros errores no controlados [cite: 92]
+                        mostrarError("Error del servidor: " + errorText);
+                    }
+                }
+            } catch (e) {
+                // Control de excepciones de red [cite: 89, 90]
+                mostrarError("Error de conexión: " + e.message);
+            }
+        }
+    );
 }
