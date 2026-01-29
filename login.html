@@ -1,7 +1,8 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
+    <meta name="referrer" content="origin">
     <title>Acceso | CSL</title>
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
@@ -26,7 +27,10 @@
       <form
         id="loginForm"
         class="form-standard"
-        onsubmit="event.preventDefault(); procesarLogin();"
+        onsubmit="
+          event.preventDefault();
+          procesarLogin();
+        "
       >
         <label>Usuario (Email):</label>
         <input type="email" id="usuario" required class="form-control mb-3" />
@@ -53,6 +57,32 @@
         </button>
       </form>
 
+      <div class="social-login text-center mt-3">
+        <p class="text-muted mb-2">- O entra con -</p>
+
+        <script
+          src="https://accounts.google.com/gsi/client"
+          async
+          defer
+        ></script>
+
+        <div
+          id="g_id_onload"
+          data-client_id="379423865132-25iuep1lh9kav2aa63fs9flvdrc7gmbi.apps.googleusercontent.com"
+          data-callback="manejarLoginGoogle"
+          data-auto_prompt="false"
+        ></div>
+
+        <div
+          class="g_id_signin"
+          data-type="standard"
+          data-size="large"
+          data-theme="outline"
+          data-text="sign_in_with"
+          data-shape="rectangular"
+          data-logo_alignment="left"
+        ></div>
+      </div>
       <div class="login-links mt-3 text-center">
         <p>¿No tienes cuenta? <a href="register.html">Regístrate aquí</a></p>
         <a href="index.html" class="text-decoration-none"
@@ -64,5 +94,52 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/app.js"></script>
     <script src="js/auth.js"></script>
+
+    <script>
+      // Esta función la llama Google automáticamente cuando te logueas
+      function handleCredentialResponse(response) {
+        try {
+          // 1. Decodificar el token de Google (JWT)
+          const datosUsuario = decodificarJwt(response.credential);
+
+          console.log("Datos de Google:", datosUsuario); // Para ver si llega bien
+
+          // 2. Crear el objeto usuario compatible con tu sistema CSL
+          const usuarioCSL = {
+            email: datosUsuario.email,
+            nombre: datosUsuario.name, // Google nos da el nombre real
+            fullName: datosUsuario.name, // Para compatibilidad
+            picture: datosUsuario.picture, // Foto de perfil
+            roleId: 2, // Asignamos rol de usuario normal por defecto
+            token: response.credential,
+          };
+
+          // 3. Guardar en LocalStorage (Igual que hace tu login normal)
+          localStorage.setItem("usuario_csl", JSON.stringify(usuarioCSL));
+
+          // 4. Redirigir al panel
+          window.location.href = "admin_dashboard.html"; // O index.html
+        } catch (error) {
+          console.error("Error al procesar Google Login", error);
+          alert("Error al iniciar sesión con Google");
+        }
+      }
+
+      // Función auxiliar para leer los datos del token de Google
+      function decodificarJwt(token) {
+        var base64Url = token.split(".")[1];
+        var base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+        var jsonPayload = decodeURIComponent(
+          window
+            .atob(base64)
+            .split("")
+            .map(function (c) {
+              return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
+            })
+            .join(""),
+        );
+        return JSON.parse(jsonPayload);
+      }
+    </script>
   </body>
 </html>

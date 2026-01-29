@@ -1,193 +1,232 @@
-//
+// Clave donde se guardan todos los usuarios (Google + Manuales)
+const CLAVE_USUARIOS_DB = 'usuarios_csl';
+
+// Variables globales
 let usuariosCargados = [];
 
-async function cargarUsuarios() {
+// --- CARGAR USUARIOS (Desde LocalStorage) ---
+function cargarUsuarios() {
     const tablaID = 'tabla-cuerpo-usuarios';
-    limpiarTabla(tablaID);
+    const cuerpo = document.getElementById(tablaID);
+    if(cuerpo) cuerpo.innerHTML = ''; // Limpiar tabla
     
+    // Mostrar botón de añadir solo si es admin
     const btnAdd = document.querySelector('.add-button');
-    if (btnAdd) btnAdd.style.display = esAdmin() ? 'block' : 'none';
+    if (btnAdd && typeof esAdmin === 'function') {
+        btnAdd.style.display = esAdmin() ? 'block' : 'none';
+    }
 
     try {
-        const response = await fetch(`${API_BASE_URL}/users`);
-        if (!response.ok) throw new Error("Error conectando con el servidor");
+        // 1. Leemos la lista de usuarios guardada
+        const usuariosGuardados = localStorage.getItem(CLAVE_USUARIOS_DB);
         
-        usuariosCargados = await response.json();
+        if (usuariosGuardados) {
+            usuariosCargados = JSON.parse(usuariosGuardados);
+        } else {
+            // Si está vacía, creamos al Super Admin por defecto para que no te quedes fuera
+            usuariosCargados = [{
+                id: 1,
+                email: 'admin@csl.com',
+                fullName: 'Super Admin',
+                password: 'admin',
+                roleId: 1,
+                mobilePhone: '600000000'
+            }];
+            localStorage.setItem(CLAVE_USUARIOS_DB, JSON.stringify(usuariosCargados));
+        }
+
         renderizarTabla(usuariosCargados);
         configurarBuscador();
 
-    } catch (e) { mostrarError(e.message); }
+    } catch (e) { 
+        console.error(e);
+        mostrarError("Error al cargar usuarios locales."); 
+    }
 }
 
+// --- RENDERIZAR TABLA ---
 function renderizarTabla(listaUsuarios) {
     const cuerpo = document.getElementById('tabla-cuerpo-usuarios');
     cuerpo.innerHTML = '';
 
-    if (listaUsuarios.length === 0) {
+    if (!listaUsuarios || listaUsuarios.length === 0) {
         cuerpo.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No se encontraron resultados</td></tr>';
         return;
     }
 
-    const usuarioActual = obtenerUsuario(); 
+    // Obtenemos el usuario conectado actualmente para saber quién soy
+    const usuarioActual = JSON.parse(localStorage.getItem('usuario_csl')); 
+    const soyAdminGlobal = typeof esAdmin === 'function' ? esAdmin() : false;
 
     listaUsuarios.forEach(user => {
+        // NORMALIZACIÓN DE DATOS (Para que funcionen Google y Manuales a la vez)
+        // Algunos tienen 'id' y otros 'userId'. Algunos 'email' y otros 'userEmail'.
+        const id = user.id || user.userId;
+        const email = user.email || user.userEmail;
+        const nombre = user.fullName || 'Sin Nombre';
+        const rol = user.roleId;
+
         let botonesAccion = '<span class="text-muted small"><i class="bi bi-lock-fill"></i></span>';
         
-        if (esAdmin()) {
-            // --- PROTECCIÓN BLINDADA PARA SUPER ADMIN ---
-            // 1. Protegemos por EMAIL (el más seguro, ya que usas admin@csl.com para entrar)
-            // 2. Protegemos por NOMBRE "Super Admin"
-            // 3. Protegemos al usuario que está conectado (tú mismo)
-            const esJefeSupremo = (user.userEmail === 'admin@csl.com') || (user.fullName === 'Super Admin');
-            const soyYo = usuarioActual && (user.userId === usuarioActual.userId);
+        if (soyAdminGlobal) {
+            // Protección: No borrar al admin principal ni a uno mismo
+            const esJefeSupremo = (email === 'admin@csl.com') || (email === 'rubiker83@gmail.com');
+            const soyYo = usuarioActual && ( (usuarioActual.id || usuarioActual.userId) === id );
 
             if (esJefeSupremo || soyYo) {
-                // Si es intocable, mostramos un escudo en vez de la papelera
                 botonesAccion = `
-                    <button class="btn btn-sm btn-warning" onclick="abrirModalEditar(${user.userId})"><i class="bi bi-pencil-square"></i></button>
-                    <span class="text-danger ms-1" style="cursor:help;" title="Este usuario no se puede borrar (Protegido)">
-                        <i class="bi bi-shield-lock-fill"></i>
-                    </span>
+                    <button class="btn btn-sm btn-warning" onclick="abrirModalEditar(${id})"><i class="bi bi-pencil-square"></i></button>
+                    <span class="text-danger ms-1" title="Protegido"><i class="bi bi-shield-lock-fill"></i></span>
                 `;
             } else {
-                // Usuario normal -> Se puede borrar
                 botonesAccion = `
-                    <button class="btn btn-sm btn-warning" onclick="abrirModalEditar(${user.userId})"><i class="bi bi-pencil-square"></i></button>
-                    <button class="btn btn-sm btn-danger" onclick="solicitarBorrado(${user.userId})"><i class="bi bi-trash-fill"></i></button>
+                    <button class="btn btn-sm btn-warning" onclick="abrirModalEditar(${id})"><i class="bi bi-pencil-square"></i></button>
+                    <button class="btn btn-sm btn-danger" onclick="solicitarBorrado(${id})"><i class="bi bi-trash-fill"></i></button>
                 `;
             }
         }
 
         const movil = user.mobilePhone || '-';
-        const celdaID = esAdmin() ? `<td>${user.userId}</td>` : '';
+        // Admin ve el ID, usuarios normales no
+        const celdaID = soyAdminGlobal ? `<td>${id}</td>` : '';
 
         const row = document.createElement('tr');
         row.innerHTML = `
             ${celdaID}
-            <td>${user.fullName}</td>
-            <td>${user.userEmail}</td>
+            <td>
+                ${user.picture ? `<img src="${user.picture}" class="rounded-circle me-2" width="25">` : ''}
+                ${nombre}
+            </td>
+            <td>${email}</td>
             <td>${movil}</td>
-            <td>${user.roleId === 1 ? '<span class="badge bg-primary">Admin</span>' : '<span class="badge bg-secondary">Usuario</span>'}</td>
+            <td>${rol === 1 ? '<span class="badge bg-primary">Admin</span>' : '<span class="badge bg-secondary">Usuario</span>'}</td>
             <td>${botonesAccion}</td>
         `;
         cuerpo.appendChild(row);
     });
-
-    if (typeof aplicarPermisosVisuales === 'function') aplicarPermisosVisuales();
 }
 
+// --- BUSCADOR ---
 function configurarBuscador() {
     const input = document.querySelector('.search-input');
     const btn = document.querySelector('.search-button');
+    if (!input) return;
 
     const filtrar = () => {
         const texto = input.value.toLowerCase();
-        const filtrados = usuariosCargados.filter(u => 
-            (u.fullName && u.fullName.toLowerCase().includes(texto)) || 
-            (u.userEmail && u.userEmail.toLowerCase().includes(texto))
-        );
+        const filtrados = usuariosCargados.filter(u => {
+            const nombre = u.fullName || '';
+            const email = u.email || u.userEmail || '';
+            return nombre.toLowerCase().includes(texto) || email.toLowerCase().includes(texto);
+        });
         renderizarTabla(filtrados);
     };
 
-    btn.onclick = filtrar;
+    if(btn) btn.onclick = filtrar;
     input.addEventListener('keyup', filtrar);
 }
 
-// FUNCIONES DE ACCIÓN (Crear, Editar, Borrar)
+// --- CREAR USUARIO (Guarda en LocalStorage) ---
 function crearUsuario() {
-    if (!esAdmin()) return mostrarError("⛔ Acceso Denegado.");
+    if (typeof esAdmin === 'function' && !esAdmin()) return alert("⛔ Acceso Denegado.");
 
+    // Usamos las claves estandarizadas (email, password, etc)
     mostrarFormulario("Nuevo Usuario", [
         { label: "Nombre Completo", key: "fullName" },
-        { label: "Email", key: "userEmail", type: "email" },
+        { label: "Email", key: "email", type: "email" },
         { label: "Móvil", key: "mobilePhone", type: "tel" },
-        { label: "Contraseña", key: "userPassword", type: "password" },
+        { label: "Contraseña", key: "password", type: "password" },
         { label: "Rol (1=Admin, 2=User)", key: "roleId", type: "select", options: [{val:"2",text:"Usuario/Cliente"},{val:"1",text:"Administrador"}] }
-    ], async (datos) => {
-        if(!datos.userEmail || !datos.userPassword) return mostrarError("Faltan datos.");
-        datos.isActive = true;
-        try {
-            const res = await fetch(`${API_BASE_URL}/users`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(datos) });
-            if(res.ok) { mostrarPopup("Éxito", "Usuario creado", "success"); cargarUsuarios(); }
-            else mostrarError("Error creando usuario.");
-        } catch(e) { mostrarError(e.message); }
+    ], (datos) => {
+        if(!datos.email || !datos.password) return alert("Faltan datos obligatorios.");
+        
+        const nuevoUsuario = {
+            id: Date.now(), // ID único basado en tiempo
+            ...datos,
+            roleId: parseInt(datos.roleId) // Asegurar que es número
+        };
+
+        // Guardamos
+        usuariosCargados.push(nuevoUsuario);
+        localStorage.setItem(CLAVE_USUARIOS_DB, JSON.stringify(usuariosCargados));
+
+        alert("Usuario creado correctamente");
+        renderizarTabla(usuariosCargados);
     });
 }
 
+// --- EDITAR USUARIO ---
 function abrirModalEditar(id) {
-    if (!esAdmin()) return mostrarError("⛔ Solo admin.");
-    const user = usuariosCargados.find(u => u.userId === id);
+    // Buscamos soportando ambos nombres de ID
+    const user = usuariosCargados.find(u => (u.id === id) || (u.userId === id));
     if (!user) return;
 
-    // Bloqueamos edición de email del Super Admin por seguridad (opcional)
-    const esSuper = (user.userEmail === 'admin@csl.com');
+    const email = user.email || user.userEmail;
+    // Protegemos edición de emails críticos
+    const esIntocable = (email === 'admin@csl.com' || email === 'rubiker83@gmail.com');
 
     mostrarFormulario("Editar Usuario", [
         { label: "Nombre", key: "fullName", value: user.fullName },
-        { label: "Email", key: "userEmail", value: user.userEmail, readOnly: esSuper }, 
+        { label: "Email", key: "email", value: email, readOnly: esIntocable }, 
         { label: "Móvil", key: "mobilePhone", value: user.mobilePhone || '' },
-        { label: "Nueva Contraseña (Opcional)", key: "userPassword", type: "password" },
+        { label: "Nueva Contraseña (Dejar vacío para mantener)", key: "password", type: "password" },
         { label: "Rol", key: "roleId", value: user.roleId.toString(), type: "select", options: [{val:"2",text:"Usuario/Cliente"},{val:"1",text:"Administrador"}] }
-    ], async (datos) => {
-        datos.userId = id;
-        datos.isActive = true;
-        try {
-            const res = await fetch(`${API_BASE_URL}/users/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(datos) });
-            if(res.ok) { mostrarPopup("Actualizado", "Usuario modificado", "success"); cargarUsuarios(); }
-            else mostrarError("Error actualizando.");
-        } catch(e) { mostrarError(e.message); }
+    ], (datos) => {
+        
+        // Actualizamos los campos
+        user.fullName = datos.fullName;
+        user.mobilePhone = datos.mobilePhone;
+        user.roleId = parseInt(datos.roleId);
+        
+        // Solo cambiamos contraseña si escribió algo
+        if (datos.password && datos.password.trim() !== "") {
+            user.password = datos.password;
+        }
+
+        // Guardamos cambios en LocalStorage
+        localStorage.setItem(CLAVE_USUARIOS_DB, JSON.stringify(usuariosCargados));
+        
+        alert("Usuario actualizado");
+        renderizarTabla(usuariosCargados);
     });
 }
 
+// --- BORRAR USUARIO (CON PROTECCIÓN DE ESCRITURA) ---
 function solicitarBorrado(id) {
-    if (!esAdmin()) return mostrarError("⛔ Solo admin.");
-    
-    const user = usuariosCargados.find(u => u.userId === id);
+    // 1. Buscamos al usuario
+    const user = usuariosCargados.find(u => (u.id === id) || (u.userId === id));
     if (!user) return;
+    
+    const email = user.email || user.userEmail;
 
-    // 1. Protección Frontend (Visual)
-    if (user.userEmail === 'admin@csl.com' || user.fullName === 'Super Admin') {
-        mostrarPopup("Acción Prohibida", "Por seguridad, no puedes eliminar al Super Administrador principal desde la interfaz web.", "error");
+    // 2. Comprobamos que la función de seguridad existe (está en app.js)
+    if (typeof mostrarConfirmacionSegura !== 'function') {
+        // Fallback por si acaso no cargó app.js
+        if(confirm("¿Borrar usuario?")) ejecutarBorrado(id); 
         return;
     }
 
-    // 2. Confirmación Segura (Cumple requisito de borrado no mecánico [cite: 80, 81])
+    // 3. Lanzamos el POP-UP DE SEGURIDAD
     mostrarConfirmacionSegura(
         "¿Eliminar Usuario?", 
-        `Vas a eliminar a <b>${user.fullName}</b>.<br>Esta acción es irreversible.`, 
-        user.userEmail, // Palabra clave obligatoria
-        async () => {
-            try {
-                const response = await fetch(`${API_BASE_URL}/users/${id}`, { method: 'DELETE' });
-
-                if (response.ok) {
-                    mostrarPopup("Eliminado", "El usuario ha sido borrado correctamente.", "success");
-                    cargarUsuarios();
-                } else {
-                    // --- AQUÍ ESTÁ LA CORRECCIÓN DE LÓGICA ---
-                    const errorText = await response.text();
-                    
-                    if (response.status === 409) {
-                        // CUMPLE REQUISITO: Avisar si tiene relación con otras tablas
-                        mostrarPopup(
-                            "No se puede eliminar", 
-                            `Conflictos de datos: <b>Este usuario tiene pedidos o registros asociados.</b><br>
-                             El sistema impide el borrado para mantener la integridad de la base de datos. 
-                             Debes borrar sus pedidos antes de eliminar al usuario.`, 
-                            "warning"
-                        );
-                    } else if (response.status === 400 || response.status === 403) {
-                        // CUMPLE REQUISITO: Protección del último admin
-                        mostrarPopup("Operación Denegada", `El servidor rechazó la operación (Posiblemente sea el último administrador activo).<br><i>Detalle: ${errorText}</i>`, "error");
-                    } else {
-                        // Otros errores no controlados [cite: 92]
-                        mostrarError("Error del servidor: " + errorText);
-                    }
-                }
-            } catch (e) {
-                // Control de excepciones de red [cite: 89, 90]
-                mostrarError("Error de conexión: " + e.message);
-            }
+        `Estás a punto de eliminar a <b>${user.fullName}</b>.<br>Esta acción no se puede deshacer.`, 
+        email, // Esta es la palabra clave que el usuario debe escribir
+        () => {
+            // Esta función solo se ejecuta si el usuario escribe bien el correo
+            ejecutarBorrado(id);
         }
     );
+}
+
+// Función auxiliar para borrar físicamente (se llama tras confirmar)
+function ejecutarBorrado(id) {
+    // Filtramos para quitar al usuario de la lista
+    usuariosCargados = usuariosCargados.filter(u => (u.id !== id && u.userId !== id));
+    
+    // Guardamos en LocalStorage
+    localStorage.setItem(CLAVE_USUARIOS_DB, JSON.stringify(usuariosCargados));
+    
+    // Refrescamos la tabla y avisamos
+    renderizarTabla(usuariosCargados);
+    mostrarPopup("Eliminado", "El usuario ha sido eliminado correctamente.", "success");
 }

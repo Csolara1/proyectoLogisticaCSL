@@ -256,3 +256,36 @@ async function solicitarRecuperacion() {
         btn.disabled = false;
     }
 }
+
+// --- LÓGICA LOGIN CON GOOGLE ---
+document.addEventListener("DOMContentLoaded", async () => {
+    // 1. Miramos si la URL trae el parámetro "google_auth=success"
+    const params = new URLSearchParams(window.location.search);
+    const userId = params.get('user_id');
+
+    if (userId) {
+        // 2. Limpiamos la URL para que no se vea feo
+        window.history.replaceState({}, document.title, window.location.pathname);
+
+        // 3. Pedimos al Backend los datos de este usuario para guardarlos en LocalStorage
+        try {
+            // Nota: Asumimos que la sesión de cookie ya está creada por Spring Security
+            const response = await fetch(`${API_BASE_URL}/users/${userId}`); 
+            
+            if (response.ok) {
+                const usuarioData = await response.json();
+                
+                // 4. Guardamos en el formato que tu app espera
+                localStorage.setItem('usuario_csl', JSON.stringify(usuarioData));
+                
+                mostrarPopup("¡Bienvenido!", `Hola de nuevo, ${usuarioData.fullName}`, "success");
+                setTimeout(() => { window.location.href = 'admin_dashboard.html'; }, 1500);
+            } else {
+                mostrarPopup("Error", "No se pudieron recuperar tus datos de Google.", "error");
+            }
+        } catch (e) {
+            console.error(e);
+            mostrarPopup("Error", "Fallo de conexión tras Google Login.", "error");
+        }
+    }
+});

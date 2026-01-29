@@ -1,5 +1,5 @@
 //
-const API_BASE_URL = '';
+const API_BASE_URL = 'http://localhost:8080/api';
 
 function obtenerUsuario() {
     return JSON.parse(localStorage.getItem('usuario_csl'));
@@ -243,4 +243,141 @@ function aplicarPermisosVisuales() {
         // Lo gestionaremos en cada archivo JS específico (users.js, orders.js...) 
         // porque las filas se crean dinámicamente.
     }
+}
+
+// =============================================================
+// 1. LOGIN CON GOOGLE (Flujo Inteligente con tu API)
+// =============================================================
+function manejarLoginGoogle(response) {
+    try {
+        const datosGoogle = decodificarJwt(response.credential);
+        const emailGoogle = datosGoogle.email;
+
+        // 1. Buscamos en LocalStorage si ya lo tenemos guardado
+        let usuariosRegistrados = JSON.parse(localStorage.getItem('usuarios_csl')) || [];
+        let usuarioEncontrado = usuariosRegistrados.find(u => u.email === emailGoogle);
+
+        // --- A: YA EXISTE (Entrar directo) ---
+        if (usuarioEncontrado) {
+            console.log("Usuario recurrente. Login directo.");
+            usuarioEncontrado.picture = datosGoogle.picture;
+            localStorage.setItem('usuarios_csl', JSON.stringify(usuariosRegistrados));
+            iniciarSesionYRedirigir(usuarioEncontrado);
+        } 
+        
+        // --- B: NUEVO (Usamos tu API para enviar correo) ---
+        else {
+            console.log("Usuario nuevo. Iniciando flujo con API...");
+
+            // Paso 1: Creamos el usuario en tu Base de Datos Local (pero INACTIVO)
+            const nuevoUsuario = {
+                id: Date.now(),
+                email: emailGoogle,
+                nombre: datosGoogle.given_name,
+                fullName: datosGoogle.name,
+                roleId: 2, 
+                picture: datosGoogle.picture,
+                origen: 'google',
+                // Importante: Lo guardamos sin contraseña aún
+            };
+            usuariosRegistrados.push(nuevoUsuario);
+            localStorage.setItem('usuarios_csl', JSON.stringify(usuariosRegistrados));
+
+            // Paso 2: Llamamos a tu endpoint de "Forgot Password"
+            // Esto enviará un correo real a su Gmail con un enlace seguro.
+            enviarCorreoActivacion(emailGoogle);
+        }
+
+    } catch (error) {
+        console.error("Error Google:", error);
+        mostrarError("Error al procesar la solicitud.");
+    }
+}
+
+// =============================================================
+// 2. FUNCIÓN QUE LLAMA A TU API JAVA REAL
+// =============================================================
+async function enviarCorreoActivacion(emailDestino) {
+    
+    mostrarPopup("Procesando...", "Contactando con el servidor...", "info");
+
+    try {
+        // Usamos tu endpoint '/forgot-password' que ya existe y funciona
+        const response = await fetch('http://localhost:8080/api/auth/forgot-password', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email: emailDestino })
+        });
+
+        if (response.ok) {
+            mostrarPopup(
+                "📧 Verificación Enviada", 
+                `Hemos enviado un correo a <b>${emailDestino}</b>.<br>
+                 Por favor, revisa tu bandeja de entrada y haz clic en el enlace para <b>crear tu contraseña</b> y activar la cuenta.`, 
+                "success"
+            );
+        } else {
+            // Si la API dice 404 es que el usuario no existe en la BD de Java.
+            // En ese caso, primero tenemos que registrarlo "en silencio" en Java.
+            if(response.status === 404) {
+                registrarEnJavaYEnviarCorreo(emailDestino);
+            } else {
+                mostrarError("Error al enviar el correo. Código: " + response.status);
+            }
+        }
+
+    } catch (error) {
+        console.error(error);
+        mostrarError("No se pudo conectar con la API (Backend apagado).");
+    }
+}
+
+// =============================================================
+// 3. REGISTRO SILENCIOSO EN JAVA (Para que funcione el correo)
+// =============================================================
+async function registrarEnJavaYEnviarCorreo(email) {
+    // Como tu API '/forgot-password' exige que el usuario exista,
+    // primero lo creamos con una contraseña temporal aleatoria.
+    try {
+        const passTemporal = Math.random().toString(36).slice(-8);
+        
+        const registroResponse = await fetch('http://localhost:8080/api/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                fullName: "Usuario Google", // Nombre temporal
+                userEmail: email,
+                userPassword: passTemporal, // Contraseña basura que luego cambiará
+                mobilePhone: "000000000"
+            })
+        });
+
+        if (registroResponse.ok) {
+            // Ahora que ya existe en Java, pedimos el correo de recuperación
+            // Esperamos 1 segundo para asegurar que la BD guardó el dato
+            setTimeout(() => enviarCorreoActivacion(email), 1000);
+        } else {
+            console.error("Fallo al pre-registrar en Java");
+        }
+    } catch (e) {
+        console.error("Error conexión Java:", e);
+    }
+}
+
+// Mantén tu función iniciarSesionYRedirigir igual que antes
+function iniciarSesionYRedirigir(usuario) {
+    localStorage.setItem('usuario_csl', JSON.stringify(usuario));
+    window.location.href = 'admin_dashboard.html';
+}
+
+// Función auxiliar para leer el token de Google (JWT)
+function decodificarJwt(token) {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+    return JSON.parse(jsonPayload);
 }
