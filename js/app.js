@@ -1,5 +1,7 @@
 //
-const API_BASE_URL = 'http://localhost:8080/api';
+const API_BASE_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? 'http://localhost:8080/api'              // Entorno de Pruebas
+    : 'https://controlsystemlogistic.com/api';
 
 function obtenerUsuario() {
     return JSON.parse(localStorage.getItem('usuario_csl'));
