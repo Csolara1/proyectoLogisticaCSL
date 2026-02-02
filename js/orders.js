@@ -1,202 +1,221 @@
-//
-let pedidosCargados = [];
+// js/orders.js - GESTIÓN DE PEDIDOS
+
+let pedidosCache = [];
+
+document.addEventListener('DOMContentLoaded', () => {
+    cargarPedidos();
+    
+    // Ocultar botón "Nuevo Pedido" si es cliente
+    if (!esAdmin()) {
+        const btnAdd = document.querySelector('.add-button'); // O '.btn-add-order'
+        if (btnAdd) btnAdd.style.display = 'none';
+    }
+});
 
 async function cargarPedidos() {
-    const tablaID = 'tabla-cuerpo-pedidos';
-    limpiarTabla(tablaID);
+    const tablaCuerpo = document.getElementById('tabla-cuerpo-pedidos');
+    tablaCuerpo.innerHTML = '<tr><td colspan="7" class="text-center">Cargando...</td></tr>';
 
-    const btnAdd = document.querySelector('.add-button');
-    if (btnAdd) btnAdd.style.display = esAdmin() ? 'block' : 'none';
-
+    const usuario = obtenerUsuario();
     try {
-        const response = await fetch(`${API_BASE_URL}/orders`);
-        if (!response.ok) throw new Error("Error API Pedidos");
+        let url = `${API_BASE_URL}/orders`;
         
-        pedidosCargados = await response.json();
-        renderizarTabla(pedidosCargados);
+        // FILTRADO DE SEGURIDAD: Si es cliente, pedimos solo los suyos
+        if (!esAdmin()) {
+            const id = usuario.userId || usuario.id;
+            url += `?userId=${id}`;
+        }
+
+        const response = await fetch(url);
+        if (!response.ok) throw new Error("Error cargando pedidos");
+        
+        pedidosCache = await response.json();
+        renderizarTabla(pedidosCache);
         configurarBuscador();
 
-    } catch (error) { mostrarError(error.message); }
+    } catch (error) {
+        console.error(error);
+        tablaCuerpo.innerHTML = '<tr><td colspan="7" class="text-center text-danger">No se pudieron cargar los pedidos</td></tr>';
+    }
 }
 
-function renderizarTabla(listaPedidos) {
+function renderizarTabla(lista) {
     const cuerpo = document.getElementById('tabla-cuerpo-pedidos');
     cuerpo.innerHTML = '';
 
-    if (listaPedidos.length === 0) {
-        cuerpo.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No hay coincidencias</td></tr>';
+    if (lista.length === 0) {
+        cuerpo.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No hay pedidos registrados</td></tr>';
         return;
     }
 
     const soyAdmin = esAdmin();
 
-    listaPedidos.forEach(order => {
-        let botonesAccion = '';
+    lista.forEach(order => {
+        let botones = '';
         
-        // Botón de IMPRIMIR ETIQUETA (Visible para todos, es útil para operarios también)
-        const btnImprimir = `
-            <button class="btn btn-sm btn-outline-secondary me-1" onclick="imprimirEtiqueta(${order.id})" title="Imprimir Etiqueta">
-                <i class="bi bi-printer-fill"></i>
-            </button>
-        `;
+        // Botón Ticket (Para todos)
+        const btnTicket = `
+            <button class="btn btn-sm btn-outline-secondary me-1" onclick="descargarTicket(${order.id})" title="Descargar Ticket">
+                <i class="bi bi-file-earmark-pdf"></i>
+            </button>`;
 
         if (soyAdmin) {
-            botonesAccion = `
-                ${btnImprimir}
-                <button class="btn btn-sm btn-danger" onclick="borrarPedido(${order.id})" title="Borrar">
+            // Admin: Ticket + Editar + Borrar
+            botones = `
+                ${btnTicket}
+                <button class="btn btn-sm btn-primary me-1" onclick="editarPedido(${order.id})" title="Editar">
+                    <i class="bi bi-pencil-square"></i>
+                </button>
+                <button class="btn btn-sm btn-danger" onclick="borrarPedido(${order.id})" title="Eliminar">
                     <i class="bi bi-trash-fill"></i>
                 </button>
             `;
         } else {
-            botonesAccion = `
-                ${btnImprimir}
-                <span class="text-muted small ms-1"><i class="bi bi-eye-fill"></i> Ver</span>
-            `;
+            // Cliente: Solo Ticket
+            botones = btnTicket;
         }
 
-        // Ocultar ID si no es admin
-        const celdaID = soyAdmin ? `<td>${order.id}</td>` : '';
+        // Ocultar ID visualmente para clientes (opcional, pero queda mejor)
+        const celdaId = soyAdmin ? `<td>${order.id}</td>` : ''; 
 
         const row = document.createElement('tr');
         row.innerHTML = `
-            ${celdaID}
+            ${celdaId}
             <td>${order.clientName}</td>
             <td>${order.origin}</td>
             <td>${order.destination}</td>
-            <td><span class="badge ${order.status === 'ENTREGADO' ? 'bg-success' : 'bg-warning text-dark'}">${order.status}</span></td>
-            <td>${botonesAccion}</td>
+            <td><span class="badge ${getStatusColor(order.status)}">${order.status}</span></td>
+            <td>${order.creationDate || '-'}</td>
+            <td>${botones}</td>
         `;
         cuerpo.appendChild(row);
     });
-
-    if (typeof aplicarPermisosVisuales === 'function') aplicarPermisosVisuales();
 }
 
-function configurarBuscador() {
-    const input = document.querySelector('.search-input');
-    const btn = document.querySelector('.search-button');
-
-    const filtrar = () => {
-        const texto = input.value.toLowerCase();
-        const filtrados = pedidosCargados.filter(o => 
-            (o.clientName && o.clientName.toLowerCase().includes(texto)) || 
-            (o.origin && o.origin.toLowerCase().includes(texto)) || 
-            (o.destination && o.destination.toLowerCase().includes(texto))
-        );
-        renderizarTabla(filtrados);
-    };
-
-    btn.onclick = filtrar;
-    input.addEventListener('keyup', filtrar);
+function getStatusColor(status) {
+    if (!status) return 'bg-secondary';
+    const s = status.toUpperCase();
+    if (s.includes('ENTREGADO')) return 'bg-success';
+    if (s.includes('PENDIENTE')) return 'bg-warning text-dark';
+    if (s.includes('CANCELADO')) return 'bg-danger';
+    return 'bg-primary'; // En tránsito, proceso, etc.
 }
 
-// --- NUEVA FUNCIÓN: GENERAR ETIQUETA PDF ---
-async function imprimirEtiqueta(id) {
-    const order = pedidosCargados.find(o => o.id === id);
-    if (!order) return;
-
-    try {
-        const { jsPDF } = window.jspdf;
-        // Creamos un PDF tamaño A6 (Típico de etiquetas de envío: 105mm x 148mm)
-        const doc = new jsPDF({
-            orientation: 'portrait',
-            unit: 'mm',
-            format: 'a6'
-        });
-
-        // 1. Cabecera CSL
-        doc.setFillColor(94, 53, 177); // Morado
-        doc.rect(0, 0, 105, 20, 'F');
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(16);
-        doc.setFont("helvetica", "bold");
-        doc.text("CSL LOGISTICS", 52.5, 13, { align: "center" });
-
-        // 2. ID Gigante
-        doc.setTextColor(0, 0, 0);
-        doc.setFontSize(10);
-        doc.text("ORDER ID:", 10, 35);
-        doc.setFontSize(30);
-        doc.text(`#${order.id}`, 10, 48);
-
-        // 3. Ruta
-        doc.setLineWidth(0.5);
-        doc.line(10, 55, 95, 55); // Línea separadora
-
-        doc.setFontSize(10);
-        doc.setTextColor(100, 100, 100);
-        doc.text("ORIGEN (FROM):", 10, 65);
-        doc.setFontSize(14);
-        doc.setTextColor(0, 0, 0);
-        doc.text(order.origin.toUpperCase(), 10, 72);
-
-        doc.setFontSize(10);
-        doc.setTextColor(100, 100, 100);
-        doc.text("DESTINO (TO):", 10, 85);
-        doc.setFontSize(18); // Destino más grande
-        doc.setTextColor(0, 0, 0);
-        doc.text(order.destination.toUpperCase(), 10, 93);
-
-        // 4. Cliente
-        doc.line(10, 100, 95, 100);
-        doc.setFontSize(10);
-        doc.text(`CLIENTE: ${order.clientName}`, 10, 110);
-        doc.text(`TRANSPORTE: ${order.transportMode || 'ESTÁNDAR'}`, 10, 116);
-
-        // 5. Simulación Código de Barras (Visual)
-        doc.setFillColor(0, 0, 0);
-        // Dibujamos barritas aleatorias para simular
-        let x = 10;
-        while(x < 95) {
-            const w = Math.random() * 2 + 0.5;
-            doc.rect(x, 125, w, 15, 'F');
-            x += w + (Math.random() * 2);
-        }
-        doc.setFontSize(8);
-        doc.text(`*CSL-${order.id}-EXP*`, 52.5, 144, { align: "center" });
-
-        // Guardar
-        doc.save(`Etiqueta_Pedido_${order.id}.pdf`);
-
-    } catch (e) {
-        console.error(e);
-        mostrarError("Error al generar la etiqueta PDF.");
-    }
-}
+// --- ACCIONES ---
 
 function crearPedido() {
-    if (!esAdmin()) return mostrarError("⛔ Acceso Denegado.");
+    // Solo Admin puede crear
+    if (!esAdmin()) return mostrarError("No tienes permisos para crear pedidos.");
 
-    const ciudadesEspaña = ["Álava", "Albacete", "Alicante", "Almería", "Asturias", "Ávila", "Badajoz", "Barcelona", "Burgos", "Cáceres", "Cádiz", "Cantabria", "Castellón", "Ceuta", "Ciudad Real", "Córdoba", "Cuenca", "Girona", "Granada", "Guadalajara", "Guipúzcoa", "Huelva", "Huesca", "Illes Balears", "Jaén", "La Coruña", "La Rioja", "Las Palmas", "León", "Lleida", "Lugo", "Madrid", "Málaga", "Melilla", "Murcia", "Navarra", "Ourense", "Palencia", "Pontevedra", "Salamanca", "Santa Cruz de Tenerife", "Segovia", "Sevilla", "Soria", "Tarragona", "Teruel", "Toledo", "Valencia", "Valladolid", "Vizcaya", "Zamora", "Zaragoza"];
-    const opcionesCiudades = ciudadesEspaña.map(c => ({ val: c, text: c }));
-    const opcionesEstado = [{val:"PENDIENTE",text:"Pendiente"},{val:"EN_PROCESO",text:"En Proceso"},{val:"ENVIADO",text:"Enviado"},{val:"EN_TRANSITO",text:"En Tránsito"},{val:"ENTREGADO",text:"Entregado"},{val:"CANCELADO",text:"Cancelado"}];
+    // Opciones para desplegables
+    const estados = [
+        {val:"PENDIENTE",text:"Pendiente"}, 
+        {val:"EN_PROCESO",text:"En Proceso"},
+        {val:"EN_TRANSITO",text:"En Tránsito"}, 
+        {val:"ENTREGADO",text:"Entregado"}
+    ];
+    const transportes = [
+        {val:"TERRESTRE",text:"Terrestre"}, 
+        {val:"MARITIMO",text:"Marítimo"}, 
+        {val:"AEREO",text:"Aéreo"}
+    ];
 
     mostrarFormulario("Nuevo Pedido", [
-        { label: "Cliente", key: "clientName" },
-        { label: "Origen", key: "origin", type: "select", options: opcionesCiudades },
-        { label: "Destino", key: "destination", type: "select", options: opcionesCiudades },
-        { label: "Estado", key: "status", type: "select", options: opcionesEstado },
-        { label: "Transporte", key: "transportMode", type: "select", options: [{val:"MARITIMO",text:"Marítimo"},{val:"AEREO",text:"Aéreo"},{val:"TERRESTRE",text:"Terrestre"}] }
+        { label: "Cliente", key: "clientName", placeholder: "Nombre del cliente" },
+        { label: "ID Usuario (Opcional)", key: "userId", placeholder: "ID numérico del usuario dueño" },
+        { label: "Origen", key: "origin" },
+        { label: "Destino", key: "destination" },
+        { label: "Transporte", key: "transportMode", type: "select", options: transportes },
+        { label: "Estado", key: "status", type: "select", options: estados }
     ], async (datos) => {
-        if (!datos.clientName) return mostrarError("Faltan datos.");
         try {
-            const res = await fetch(`${API_BASE_URL}/orders`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(datos) });
-            if(res.ok) { mostrarPopup("Creado", "Pedido registrado.", "success"); cargarPedidos(); }
-            else mostrarError("Error al crear pedido.");
-        } catch(e) { mostrarError(e.message); }
+            // Limpiamos userId si está vacío
+            if (!datos.userId) delete datos.userId;
+            
+            const res = await fetch(`${API_BASE_URL}/orders`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(datos)
+            });
+            if (res.ok) {
+                mostrarPopup("Creado", "Pedido registrado con éxito.", "success");
+                cargarPedidos();
+            } else {
+                mostrarError("Error al crear el pedido.");
+            }
+        } catch(e) { mostrarError("Fallo de conexión."); }
+    });
+}
+
+function editarPedido(id) {
+    const order = pedidosCache.find(o => o.id === id);
+    if (!order) return;
+
+    const estados = [{val:"PENDIENTE",text:"Pendiente"}, {val:"EN_TRANSITO",text:"En Tránsito"}, {val:"ENTREGADO",text:"Entregado"}];
+    const transportes = [{val:"TERRESTRE",text:"Terrestre"}, {val:"MARITIMO",text:"Marítimo"}, {val:"AEREO",text:"Aéreo"}];
+
+    mostrarFormulario("Editar Pedido", [
+        { label: "Cliente", key: "clientName", value: order.clientName },
+        { label: "Origen", key: "origin", value: order.origin },
+        { label: "Destino", key: "destination", value: order.destination },
+        { label: "Estado", key: "status", type: "select", value: order.status, options: estados },
+        { label: "Transporte", key: "transportMode", type: "select", value: order.transportMode, options: transportes }
+    ], async (datos) => {
+        try {
+            // Mantenemos el ID del dueño original
+            datos.userId = order.userId;
+
+            const res = await fetch(`${API_BASE_URL}/orders/${id}`, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(datos)
+            });
+            if (res.ok) {
+                mostrarPopup("Actualizado", "Pedido modificado.", "success");
+                cargarPedidos();
+            } else {
+                mostrarError("No se pudo actualizar.");
+            }
+        } catch(e) { mostrarError("Fallo de conexión."); }
     });
 }
 
 function borrarPedido(id) {
-    if (!esAdmin()) return mostrarError("⛔ Acceso Denegado.");
-    const order = pedidosCargados.find(o => o.id === id);
+    const order = pedidosCache.find(o => o.id === id);
     if (!order) return;
 
-    mostrarConfirmacionSegura("¿Borrar Pedido?", `Estás eliminando el pedido #${id} de <b>${order.clientName}</b>.`, order.clientName, async () => {
+    // Usamos el modal seguro, pero como los pedidos son menos críticos,
+    // podemos pedir confirmar el código del pedido o simplemente el nombre del cliente.
+    // Para simplificar, usaremos confirmación simple aquí, o segura si prefieres.
+    // Usemos confirmación simple para pedidos (más rápido).
+    mostrarConfirmacion("Eliminar Pedido", `¿Seguro que quieres borrar el pedido de <b>${order.clientName}</b>?`, async () => {
         try {
-            const response = await fetch(`${API_BASE_URL}/orders/${id}`, { method: 'DELETE' });
-            if(response.ok) { mostrarPopup("Eliminado", "Pedido borrado.", "success"); cargarPedidos(); }
-            else mostrarError("No se pudo borrar.");
-        } catch(e) { mostrarError(e.message); }
+            const res = await fetch(`${API_BASE_URL}/orders/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                mostrarPopup("Eliminado", "Pedido borrado.", "success");
+                cargarPedidos();
+            } else {
+                mostrarError("Error al borrar.");
+            }
+        } catch(e) { mostrarError("Fallo de conexión."); }
+    });
+}
+
+function descargarTicket(id) {
+    mostrarPopup("Ticket Generado", `Simulando descarga del ticket #${id}...<br>(Aquí iría la lógica PDF)`, "success");
+}
+
+function configurarBuscador() {
+    const input = document.querySelector('.search-input');
+    if (!input) return;
+    
+    input.addEventListener('keyup', () => {
+        const texto = input.value.toLowerCase();
+        const filtrados = pedidosCache.filter(o => 
+            o.clientName.toLowerCase().includes(texto) ||
+            o.origin.toLowerCase().includes(texto) ||
+            o.destination.toLowerCase().includes(texto)
+        );
+        renderizarTabla(filtrados);
     });
 }

@@ -1,8 +1,18 @@
-//
-const API_BASE_URL = '/api';
+// js/app.js - VERSIÓN LOCALHOST CORREGIDA
+
+// ⚠️ IMPORTANTE: Para local usamos la URL completa
+const API_BASE_URL = 'http://localhost:8080/api'; 
+
+document.addEventListener('DOMContentLoaded', () => {
+    configurarMenuPorRol();
+    verificarSesionEnPagina();
+});
+
+// --- GESTIÓN DE USUARIOS Y ROLES ---
 
 function obtenerUsuario() {
-    return JSON.parse(localStorage.getItem('usuario_csl'));
+    const userStr = localStorage.getItem('usuario_csl');
+    return userStr ? JSON.parse(userStr) : null;
 }
 
 function esAdmin() {
@@ -10,22 +20,58 @@ function esAdmin() {
     return user && user.roleId === 1;
 }
 
+function verificarSesionEnPagina() {
+    const path = window.location.pathname;
+    // Páginas públicas que no requieren login
+    if (path.includes('login') || path.includes('register') || path.includes('forgot') || path.includes('index') || path.includes('contacto')) return;
+
+    const usuario = obtenerUsuario();
+    if (!usuario) {
+        window.location.href = 'login.html';
+    } else {
+        const nombreSpan = document.getElementById('session-username');
+        if (nombreSpan) {
+            nombreSpan.innerText = (usuario.roleId === 1 ? "Admin: " : "Cliente: ") + usuario.fullName;
+        }
+    }
+}
+
+function configurarMenuPorRol() {
+    const usuario = obtenerUsuario();
+    if (!usuario) return;
+
+    // Si es Cliente (Rol 2), ocultamos menús de gestión
+    if (usuario.roleId !== 1) {
+        const itemsProhibidos = [
+            'nav-users', 'nav-stock', 'nav-rutas', 'nav-logs', 'nav-informes', 'btn-add-order'
+        ];
+        itemsProhibidos.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        });
+        document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+    }
+}
+
+function logout() {
+    localStorage.removeItem('usuario_csl');
+    window.location.href = 'login.html';
+}
+
+// --- POPUPS Y MODALES ---
+
 function cerrarModalesYBackdrop() {
-    const modales = document.querySelectorAll('.modal.show');
-    modales.forEach(m => {
+    document.querySelectorAll('.modal.show').forEach(m => {
         const instance = bootstrap.Modal.getInstance(m);
         if (instance) instance.hide();
     });
-    const backdrops = document.querySelectorAll('.modal-backdrop');
-    backdrops.forEach(b => b.remove());
+    document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
     document.body.classList.remove('modal-open');
     document.body.style.overflow = '';
 }
 
 function mostrarPopup(titulo, mensaje, tipo = 'info') {
-
     cerrarModalesYBackdrop();
-
     let modalId = 'modal-universal';
     let modalHtml = document.getElementById(modalId);
 
@@ -33,15 +79,14 @@ function mostrarPopup(titulo, mensaje, tipo = 'info') {
         modalHtml = document.createElement('div');
         modalHtml.id = modalId;
         modalHtml.className = 'modal fade';
-        modalHtml.setAttribute('tabindex', '-1');
         modalHtml.innerHTML = `
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
-                    <div class="modal-header">
+                    <div class="modal-header text-white">
                         <h5 class="modal-title" id="modal-titulo"></h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                     </div>
-                    <div class="modal-body"><p id="modal-mensaje"></p></div>
+                    <div class="modal-body"><p id="modal-mensaje" class="mb-0"></p></div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Aceptar</button>
                     </div>
@@ -51,130 +96,13 @@ function mostrarPopup(titulo, mensaje, tipo = 'info') {
     }
 
     document.getElementById('modal-titulo').innerText = titulo;
-    const bodyMsg = document.getElementById('modal-mensaje');
-    bodyMsg.innerHTML = mensaje; 
-
+    document.getElementById('modal-mensaje').innerHTML = mensaje;
+    
     const header = modalHtml.querySelector('.modal-header');
-    header.className = 'modal-header ' + (tipo === 'error' ? 'bg-danger text-white' : tipo === 'success' ? 'bg-success text-white' : 'bg-primary text-white');
+    header.className = 'modal-header text-white ' + 
+        (tipo === 'error' ? 'bg-danger' : tipo === 'success' ? 'bg-success' : 'bg-primary');
 
-    const bootstrapModal = new bootstrap.Modal(modalHtml);
-    bootstrapModal.show();
-}
-
-function mostrarConfirmacion(titulo, mensaje, accionConfirmada) {
-    let modalId = 'modal-confirmacion';
-    let antiguo = document.getElementById(modalId);
-    if(antiguo) antiguo.remove();
-
-    let modalHtml = document.createElement('div');
-    modalHtml.id = modalId;
-    modalHtml.className = 'modal fade';
-    modalHtml.innerHTML = `
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header bg-warning text-dark">
-                    <h5 class="modal-title">${titulo}</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body"><p>${mensaje}</p></div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" id="btn-confirmar-accion" class="btn btn-danger">Sí, Confirmar</button>
-                </div>
-            </div>
-        </div>`;
-    document.body.appendChild(modalHtml);
-
-    const bootstrapModal = new bootstrap.Modal(modalHtml);
-    bootstrapModal.show();
-
-    document.getElementById('btn-confirmar-accion').onclick = () => {
-        accionConfirmada();
-        bootstrapModal.hide();
-    };
-}
-
-// --- CORRECCIÓN REQUISITO: Desplegables vacíos al inicio ---
-function mostrarFormulario(titulo, campos, onGuardar) {
-    let modalId = 'modal-formulario';
-    let antiguo = document.getElementById(modalId);
-    if(antiguo) antiguo.remove();
-
-    let inputsHTML = campos.map(c => {
-        if (c.type === 'select') {
-            // Generamos las opciones normales
-            let opcionesHtml = c.options.map(opt => 
-                `<option value="${opt.val}" ${opt.val === c.value ? 'selected' : ''}>${opt.text}</option>`
-            ).join('');
-            
-            // Si NO estamos editando (no hay valor previo), forzamos la opción vacía por defecto
-            // Cumple con el requisito: "no deben tener ninguna opción seleccionada" [cite: 73]
-            if (!c.value) {
-                opcionesHtml = `<option value="" selected disabled>-- Seleccione una opción --</option>` + opcionesHtml;
-            }
-
-            return `<div class="mb-3">
-                        <label class="form-label fw-bold">${c.label}</label>
-                        <select id="input-${c.key}" class="form-select">${opcionesHtml}</select>
-                    </div>`;
-        } else {
-            const maxLenAttr = c.maxLength ? `maxlength="${c.maxLength}"` : '';
-            const placeAttr = c.placeholder ? `placeholder="${c.placeholder}"` : '';
-            return `
-                <div class="mb-3">
-                    <label class="form-label fw-bold">${c.label}</label>
-                    <input id="input-${c.key}" type="${c.type || 'text'}" class="form-control" value="${c.value || ''}" ${maxLenAttr} ${placeAttr}>
-                </div>`;
-        }
-    }).join('');
-
-    let modalHtml = document.createElement('div');
-    modalHtml.id = modalId;
-    modalHtml.className = 'modal fade';
-    modalHtml.innerHTML = `
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title">${titulo}</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body"><form id="form-dinamico">${inputsHTML}</form></div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" id="btn-guardar-modal" class="btn btn-success">Guardar</button>
-                </div>
-            </div>
-        </div>`;
-    document.body.appendChild(modalHtml);
-
-    const bootstrapModal = new bootstrap.Modal(modalHtml);
-    bootstrapModal.show();
-
-    document.getElementById('btn-guardar-modal').onclick = () => {
-        const datos = {};
-        let errorValidacion = false;
-
-        campos.forEach(c => { 
-            const val = document.getElementById(`input-${c.key}`).value;
-            
-            // Validación de desplegables obligatoria [cite: 75]
-            if (c.type === 'select' && val === "") {
-                errorValidacion = true;
-                // Marco visual de error
-                document.getElementById(`input-${c.key}`).classList.add('is-invalid');
-            } else {
-                datos[c.key] = val;
-            }
-        });
-
-        if (errorValidacion) {
-            mostrarPopup("Datos Incompletos", "Por favor, seleccione una opción válida en todos los desplegables.", "error");
-            return;
-        }
-
-        onGuardar(datos);
-        bootstrapModal.hide();
-    };
+    new bootstrap.Modal(modalHtml).show();
 }
 
 function mostrarConfirmacionSegura(titulo, mensaje, palabraClave, accionConfirmada) {
@@ -194,185 +122,130 @@ function mostrarConfirmacionSegura(titulo, mensaje, palabraClave, accionConfirma
                 </div>
                 <div class="modal-body">
                     <p>${mensaje}</p>
-                    <p class="mb-1">Para confirmar, escribe: <strong>${palabraClave}</strong></p>
-                    <input type="text" id="input-verificacion" class="form-control" placeholder="Escribe aquí..." autocomplete="off">
+                    <p class="mb-1">Escribe: <strong>${palabraClave}</strong></p>
+                    <input type="text" id="input-verificacion" class="form-control" autocomplete="off">
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" id="btn-borrado-final" class="btn btn-danger" disabled><i class="bi bi-trash-fill"></i> Eliminar</button>
+                    <button type="button" id="btn-borrado-final" class="btn btn-danger" disabled>Confirmar</button>
                 </div>
             </div>
         </div>`;
     document.body.appendChild(modalHtml);
-
-    const bootstrapModal = new bootstrap.Modal(modalHtml);
-    bootstrapModal.show();
+    const modal = new bootstrap.Modal(modalHtml);
+    modal.show();
 
     const input = document.getElementById('input-verificacion');
     const btn = document.getElementById('btn-borrado-final');
-    input.addEventListener('input', () => {
-        btn.disabled = (input.value !== palabraClave);
-    });
-    btn.onclick = () => {
-        accionConfirmada();
-        bootstrapModal.hide();
+    input.addEventListener('input', () => btn.disabled = (input.value !== palabraClave));
+    btn.onclick = () => { accionConfirmada(); modal.hide(); };
+}
+
+function mostrarFormulario(titulo, campos, onGuardar) {
+    let modalId = 'modal-formulario';
+    let antiguo = document.getElementById(modalId);
+    if(antiguo) antiguo.remove();
+
+    let inputsHTML = campos.map(c => {
+        if (c.type === 'select') {
+            let opts = c.options.map(o => `<option value="${o.val}" ${o.val == c.value ? 'selected' : ''}>${o.text}</option>`).join('');
+            if(!c.value) opts = `<option value="" selected disabled>-- Seleccione --</option>` + opts;
+            return `<div class="mb-3"><label class="form-label fw-bold">${c.label}</label><select id="input-${c.key}" class="form-select">${opts}</select></div>`;
+        }
+        return `<div class="mb-3"><label class="form-label fw-bold">${c.label}</label><input id="input-${c.key}" type="${c.type||'text'}" class="form-control" value="${c.value||''}" placeholder="${c.placeholder||''}"></div>`;
+    }).join('');
+
+    let modalHtml = document.createElement('div');
+    modalHtml.id = modalId;
+    modalHtml.className = 'modal fade';
+    modalHtml.innerHTML = `
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white"><h5 class="modal-title">${titulo}</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body"><form>${inputsHTML}</form></div>
+                <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="button" id="btn-guardar-modal" class="btn btn-success">Guardar</button></div>
+            </div>
+        </div>`;
+    document.body.appendChild(modalHtml);
+    const modal = new bootstrap.Modal(modalHtml);
+    modal.show();
+
+    document.getElementById('btn-guardar-modal').onclick = () => {
+        const datos = {};
+        let error = false;
+        campos.forEach(c => {
+            const el = document.getElementById(`input-${c.key}`);
+            if(c.type === 'select' && el.value === "") { error=true; el.classList.add('is-invalid'); }
+            datos[c.key] = el.value;
+        });
+        if(error) return mostrarPopup("Error", "Complete los campos obligatorios.", "error");
+        onGuardar(datos);
+        modal.hide();
     };
 }
 
-function mostrarError(mensaje) { mostrarPopup("Error", mensaje, 'error'); }
-function limpiarTabla(idTabla) { const t = document.getElementById(idTabla); if(t) t.innerHTML = ''; }
-function logout() { localStorage.removeItem('usuario_csl'); window.location.href = 'login.html'; }
-function verificarSesion() {
-    const usuarioGuardado = localStorage.getItem('usuario_csl');
-    if (!usuarioGuardado) { window.location.href = 'login.html'; }
-    else {
-        const usuario = JSON.parse(usuarioGuardado);
-        const nombreSpan = document.getElementById('session-username');
-        if (nombreSpan) nombreSpan.innerText = (usuario.roleId === 1 ? "Admin: " : "Usuario: ") + usuario.fullName;
-    }
-}
+// --- LOGIN GOOGLE (CONECTADO AL BACKEND) ---
 
-function aplicarPermisosVisuales() {
-    // Si NO es administrador
-    if (!esAdmin()) {
-        // 1. Ocultar columnas de ID en las cabeceras de tabla
-        const cabecerasId = document.querySelectorAll('.col-id');
-        cabecerasId.forEach(th => th.style.display = 'none');
-
-        // 2. Ocultar celdas de ID en las filas (Esto se llama después de cargar la tabla)
-        // Lo gestionaremos en cada archivo JS específico (users.js, orders.js...) 
-        // porque las filas se crean dinámicamente.
-    }
-}
-
-// =============================================================
-// 1. LOGIN CON GOOGLE (Flujo Inteligente con tu API)
-// =============================================================
-function manejarLoginGoogle(response) {
+async function manejarLoginGoogle(response) {
     try {
         const datosGoogle = decodificarJwt(response.credential);
-        const emailGoogle = datosGoogle.email;
+        const email = datosGoogle.email;
 
-        // 1. Buscamos en LocalStorage si ya lo tenemos guardado
-        let usuariosRegistrados = JSON.parse(localStorage.getItem('usuarios_csl')) || [];
-        let usuarioEncontrado = usuariosRegistrados.find(u => u.email === emailGoogle);
-
-        // --- A: YA EXISTE (Entrar directo) ---
-        if (usuarioEncontrado) {
-            console.log("Usuario recurrente. Login directo.");
-            usuarioEncontrado.picture = datosGoogle.picture;
-            localStorage.setItem('usuarios_csl', JSON.stringify(usuariosRegistrados));
-            iniciarSesionYRedirigir(usuarioEncontrado);
-        } 
+        // 1. Preguntar al Backend si existe
+        const res = await fetch(`${API_BASE_URL}/users`);
+        let existe = false;
         
-        // --- B: NUEVO (Usamos tu API para enviar correo) ---
-        else {
-            console.log("Usuario nuevo. Iniciando flujo con API...");
+        if (res.ok) {
+            const usuarios = await res.json();
+            const usuarioEncontrado = usuarios.find(u => u.userEmail === email || u.email === email);
+            
+            if (usuarioEncontrado) {
+                // YA EXISTE -> Login directo
+                localStorage.setItem('usuario_csl', JSON.stringify(usuarioEncontrado));
+                window.location.href = 'admin_dashboard.html';
+                existe = true;
+            }
+        }
 
-            // Paso 1: Creamos el usuario en tu Base de Datos Local (pero INACTIVO)
-            const nuevoUsuario = {
-                id: Date.now(),
-                email: emailGoogle,
-                nombre: datosGoogle.given_name,
-                fullName: datosGoogle.name,
-                roleId: 2, 
-                picture: datosGoogle.picture,
-                origen: 'google',
-                // Importante: Lo guardamos sin contraseña aún
-            };
-            usuariosRegistrados.push(nuevoUsuario);
-            localStorage.setItem('usuarios_csl', JSON.stringify(usuariosRegistrados));
-
-            // Paso 2: Llamamos a tu endpoint de "Forgot Password"
-            // Esto enviará un correo real a su Gmail con un enlace seguro.
-            enviarCorreoActivacion(emailGoogle);
+        // 2. Si NO existe -> Registro automático
+        if (!existe) {
+            registrarEnJavaYEnviarCorreo(email, datosGoogle.name);
         }
 
     } catch (error) {
         console.error("Error Google:", error);
-        mostrarError("Error al procesar la solicitud.");
+        mostrarPopup("Error", "Fallo de conexión con el servidor.", "error");
     }
 }
 
-// =============================================================
-// 2. FUNCIÓN QUE LLAMA A TU API JAVA REAL
-// =============================================================
-async function enviarCorreoActivacion(emailDestino) {
-    
-    mostrarPopup("Procesando...", "Contactando con el servidor...", "info");
-
+async function registrarEnJavaYEnviarCorreo(email, nombre) {
+    mostrarPopup("Procesando", "Creando cuenta...", "info");
     try {
-        // Usamos tu endpoint '/forgot-password' que ya existe y funciona
-        const response = await fetch('http://localhost:8080/api/auth/forgot-password', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ email: emailDestino })
-        });
-
-        if (response.ok) {
-            mostrarPopup(
-                "📧 Verificación Enviada", 
-                `Hemos enviado un correo a <b>${emailDestino}</b>.<br>
-                 Por favor, revisa tu bandeja de entrada y haz clic en el enlace para <b>crear tu contraseña</b> y activar la cuenta.`, 
-                "success"
-            );
-        } else {
-            // Si la API dice 404 es que el usuario no existe en la BD de Java.
-            // En ese caso, primero tenemos que registrarlo "en silencio" en Java.
-            if(response.status === 404) {
-                registrarEnJavaYEnviarCorreo(emailDestino);
-            } else {
-                mostrarError("Error al enviar el correo. Código: " + response.status);
-            }
-        }
-
-    } catch (error) {
-        console.error(error);
-        mostrarError("No se pudo conectar con la API (Backend apagado).");
-    }
-}
-
-// =============================================================
-// 3. REGISTRO SILENCIOSO EN JAVA (Para que funcione el correo)
-// =============================================================
-async function registrarEnJavaYEnviarCorreo(email) {
-    // Como tu API '/forgot-password' exige que el usuario exista,
-    // primero lo creamos con una contraseña temporal aleatoria.
-    try {
-        const passTemporal = Math.random().toString(36).slice(-8);
+        // Registro en API
+        const passTemp = Math.random().toString(36).slice(-8) + "Aa1!";
+        const nuevoUser = { fullName: nombre, userEmail: email, userPassword: passTemp, mobilePhone: "000000000", roleId: 2, isActive: true };
         
-        const registroResponse = await fetch('http://localhost:8080/api/auth/register', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                fullName: "Usuario Google", // Nombre temporal
-                userEmail: email,
-                userPassword: passTemporal, // Contraseña basura que luego cambiará
-                mobilePhone: "000000000"
-            })
+        const resReg = await fetch(`${API_BASE_URL}/auth/register`, {
+            method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(nuevoUser)
         });
 
-        if (registroResponse.ok) {
-            // Ahora que ya existe en Java, pedimos el correo de recuperación
-            // Esperamos 1 segundo para asegurar que la BD guardó el dato
-            setTimeout(() => enviarCorreoActivacion(email), 1000);
+        if (resReg.ok) {
+            // Pedir correo de activación
+            const resMail = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
+                method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ email: email })
+            });
+            
+            if (resMail.ok) {
+                mostrarPopup("¡Bienvenido!", `Cuenta creada. Revisa tu correo <b>${email}</b> para poner tu contraseña.`, "success");
+            } else {
+                mostrarPopup("Aviso", "Cuenta creada, pero falló el envío del correo.", "warning");
+            }
         } else {
-            console.error("Fallo al pre-registrar en Java");
+            mostrarPopup("Error", "No se pudo registrar el usuario.", "error");
         }
-    } catch (e) {
-        console.error("Error conexión Java:", e);
-    }
+    } catch(e) { console.error(e); }
 }
 
-// Mantén tu función iniciarSesionYRedirigir igual que antes
-function iniciarSesionYRedirigir(usuario) {
-    localStorage.setItem('usuario_csl', JSON.stringify(usuario));
-    window.location.href = 'admin_dashboard.html';
-}
-
-// Función auxiliar para leer el token de Google (JWT)
 function decodificarJwt(token) {
     const base64Url = token.split('.')[1];
     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');

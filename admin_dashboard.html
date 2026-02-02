@@ -19,16 +19,12 @@
       href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css"
     />
 
-    <script
-      type="text/plain"
-      data-category="analytics"
-      src="https://cdn.jsdelivr.net/npm/chart.js"
-    ></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <link rel="stylesheet" href="css/style.css" />
 
     <style>
-      /* Ocultar todo el cuerpo por defecto para evitar el 'flash' */
+      /* Evitar parpadeo antes de verificar sesión */
       body {
         display: none;
       }
@@ -37,15 +33,16 @@
   <body class="admin-body">
     <header>
       <div class="logo">
-        <a href="index.html"
-          ><img
+        <a href="index.html">
+          <img
             src="assets/CSL_logo-removebg-preview.png"
             alt="Logo CSL"
             class="logo-img"
-        /></a>
+          />
+        </a>
       </div>
       <div class="user-info">
-        <span id="session-username">Admin CSL</span>
+        <span id="session-username">Cargando...</span>
         <button onclick="logout()" class="logout-button">Cerrar Sesión</button>
       </div>
     </header>
@@ -53,24 +50,29 @@
     <div class="admin-main-wrapper">
       <aside class="admin-sidebar">
         <nav>
-          <a href="admin_dashboard.html" class="active-admin"
-            ><i class="bi bi-speedometer2"></i> Dashboard</a
-          >
-          <a href="admin_users.html"
-            ><i class="bi bi-people-fill"></i> Usuarios</a
-          >
-          <a href="admin_pedidos.html"
-            ><i class="bi bi-box-seam-fill"></i> Pedidos</a
-          >
-          <a href="admin_stock.html"
-            ><i class="bi bi-bar-chart-line-fill"></i> Stock</a
-          >
-          <a href="admin_rutas.html"
-            ><i class="bi bi-geo-alt-fill"></i> Rutas y Flota</a
-          >
-          <a href="admin_informes.html"
-            ><i class="bi bi-file-earmark-text-fill"></i> Informes</a
-          >
+          <a href="admin_dashboard.html" class="active-admin">
+            <i class="bi bi-speedometer2"></i> Dashboard
+          </a>
+          
+          <a href="admin_users.html" id="nav-users">
+            <i class="bi bi-people-fill"></i> Usuarios
+          </a>
+          
+          <a href="admin_pedidos.html" id="nav-pedidos">
+            <i class="bi bi-box-seam-fill"></i> Pedidos
+          </a>
+          
+          <a href="admin_stock.html" id="nav-stock">
+            <i class="bi bi-bar-chart-line-fill"></i> Stock
+          </a>
+          
+          <a href="admin_rutas.html" id="nav-rutas">
+            <i class="bi bi-geo-alt-fill"></i> Rutas y Flota
+          </a>
+          
+          <a href="admin_informes.html" id="nav-informes">
+            <i class="bi bi-file-earmark-text-fill"></i> Informes
+          </a>
         </nav>
       </aside>
 
@@ -83,15 +85,15 @@
         <section class="dashboard-metrics">
           <div class="metric-card">
             <h3>Pedidos Activos</h3>
-            <p class="metric-number" id="metric-orders">--</p>
+            <p class="metric-number" id="metric-orders">0</p>
           </div>
           <div class="metric-card">
             <h3>Total en Stock</h3>
-            <p class="metric-number" id="metric-stock">--</p>
+            <p class="metric-number" id="metric-stock">0</p>
           </div>
           <div class="metric-card">
             <h3>Usuarios</h3>
-            <p class="metric-number" id="metric-users">--</p>
+            <p class="metric-number" id="metric-users">0</p>
           </div>
         </section>
 
@@ -107,6 +109,7 @@
                 </div>
               </div>
             </div>
+            
             <div class="col-md-6 mb-4">
               <div class="card shadow-sm p-3 h-100">
                 <h5 class="card-title text-center text-success fw-bold">
@@ -128,22 +131,16 @@
               onclick="borrarLogs()"
               id="btn-vaciar-logs"
             >
-              <i class="bi bi-trash3-fill"></i> Vaciar Registro
+              <i class="bi bi-trash3-fill"></i> Limpiar Vista
             </button>
           </div>
-          <textarea class="log-area form-control" readonly rows="8">
-Cargando logs del servidor...</textarea
-          >
+          <textarea class="log-area form-control" readonly rows="8">Cargando logs del servidor...</textarea>
         </section>
       </main>
     </div>
 
-    <script
-      type="text/plain"
-      data-category="analytics"
-      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
-    ></script>
-
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
     <script type="module" src="js/cookie-consent-init.js"></script>
 
     <script src="js/app.js"></script>
@@ -151,22 +148,11 @@ Cargando logs del servidor...</textarea
 
     <script>
       (function protegerVista() {
-        // 1. Comprobación instantánea del LocalStorage
         const usuario = localStorage.getItem('usuario_csl');
-
         if (!usuario) {
-          // Si no hay usuario, expulsamos inmediatamente
           window.location.href = 'login.html';
         } else {
-          // 2. Si hay usuario, desbloqueamos la visualización
-          // (Asume que pusiste body { display: none } en el CSS/Head)
           document.body.style.display = 'block';
-
-          // 3. Continuamos con la carga normal
-          document.addEventListener("DOMContentLoaded", () => {
-            if (typeof verificarSesion === "function") verificarSesion();
-            // Las gráficas y métricas se cargan en dashboard.js automáticamente
-          });
         }
       })();
     </script>
