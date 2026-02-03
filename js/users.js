@@ -128,32 +128,28 @@ function crearUsuario() {
     if (!esAdmin()) return mostrarPopup("Acceso Denegado", "No tienes permisos.", "error");
 
     mostrarFormulario("Nuevo Usuario", [
-        { label: "Nombre Completo", key: "fullName" },
+        // AÑADIDO: maxLength: 50
+        { label: "Nombre Completo", key: "fullName", maxLength: 50 },
         { label: "Email", key: "userEmail", type: "email" },
-        { label: "Teléfono", key: "mobilePhone" },
+        // AÑADIDO: maxLength: 9 y soloNumeros: true
+        { label: "Teléfono", key: "mobilePhone", maxLength: 9, soloNumeros: true },
         { label: "Contraseña", key: "userPassword", type: "password" },
         { label: "Rol", key: "roleId", type: "select", options: [
             {val:"2", text:"Cliente"}, 
             {val:"1", text:"Administrador"} 
         ]}
     ], async (datos) => {
+        // ... (El resto de la función se queda igual que la tenías, con el fetch) ...
         datos.roleId = parseInt(datos.roleId);
         datos.isActive = true; 
-
         try {
             const res = await fetch(`${API_BASE_URL}/auth/register`, { 
                 method: 'POST', 
                 headers: {'Content-Type': 'application/json'}, 
                 body: JSON.stringify(datos) 
             });
-            
-            if(res.ok) { 
-                mostrarPopup("Éxito", "Usuario creado correctamente.", "success"); 
-                cargarUsuarios(); 
-            } else {
-                const txt = await res.text();
-                mostrarPopup("Error", "No se pudo crear: " + txt, "error");
-            }
+            if(res.ok) { mostrarPopup("Éxito", "Usuario creado.", "success"); cargarUsuarios(); }
+            else { const txt = await res.text(); mostrarPopup("Error", txt, "error"); }
         } catch(e) { console.error(e); }
     });
 }
@@ -174,14 +170,12 @@ function editarUsuario(id) {
     if (miUsuario.roleId !== 1) return mostrarPopup("Acceso Denegado", "Los clientes no pueden editar usuarios.", "error");
 
     mostrarFormulario("Editar Usuario", [
-        { label: "Nombre", key: "fullName", value: u.fullName },
+        // AÑADIDO: maxLength: 50
+        { label: "Nombre", key: "fullName", value: u.fullName, maxLength: 50 },
         { label: "Email", key: "userEmail", value: u.userEmail, readonly: true }, 
-        { label: "Teléfono", key: "mobilePhone", value: u.mobilePhone },
-        
-        // --- ADDED PASSWORD FIELD HERE ---
+        // AÑADIDO: maxLength: 9 y soloNumeros: true
+        { label: "Teléfono", key: "mobilePhone", value: u.mobilePhone, maxLength: 9, soloNumeros: true },
         { label: "Nueva Contraseña (Opcional)", key: "userPassword", type: "password", placeholder: "Dejar en blanco para no cambiar" },
-        // ---------------------------------
-
         { label: "Rol", key: "roleId", type: "select", value: u.roleId, options: [
             {val:"2", text:"Cliente"}, 
             {val:"1", text:"Administrador"}

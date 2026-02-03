@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <title>Registro | CSL</title>
@@ -7,6 +8,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body class="login-body">
     <div class="login-container" style="max-width: 500px;">
         <div class="login-header">
@@ -14,13 +16,14 @@
             <h1>Crear Cuenta</h1>
             <p class="text-muted">Únete a la plataforma logística líder.</p>
         </div>
-        
+
         <form id="registerForm" class="form-standard" onsubmit="event.preventDefault(); procesarRegistro();">
-            
+
             <div class="mb-3">
                 <label class="fw-bold">Nombre Completo:</label>
                 <div class="input-group"> <span class="input-group-text"><i class="bi bi-person"></i></span>
-                    <input type="text" id="regNombre" class="form-control" placeholder="Juan Pérez" required>
+                    <input type="text" class="form-control" id="regNombre" placeholder="Nombre completo" maxlength="50"
+                        required>
                 </div>
             </div>
 
@@ -36,11 +39,12 @@
                 <label class="fw-bold">Teléfono Móvil:</label>
                 <div class="input-group">
                     <span class="input-group-text"><i class="bi bi-phone"></i></span>
-                    <input type="tel" id="regMovil" class="form-control" placeholder="+34 600 000 000" required>
+                    <input type="tel" class="form-control" id="regMovil" placeholder="Móvil (9 dígitos)" maxlength="9"
+                        oninput="this.value = this.value.replace(/[^0-9]/g, '')" required>
                 </div>
                 <div class="form-text small mt-1">Formato español requerido por normativa.</div>
             </div>
-            
+
             <div class="mb-3">
                 <label class="fw-bold">Contraseña:</label>
                 <div class="input-group">
@@ -56,15 +60,16 @@
                     <input type="password" id="regPassConfirm" class="form-control" placeholder="******" required>
                 </div>
             </div>
-            
+
             <button type="submit" class="cta-button w-100">
                 <i class="bi bi-person-plus-fill"></i> Registrarme
             </button>
         </form>
-        
+
         <div class="login-links mt-4 text-center border-top pt-3">
             <p>¿Ya tienes cuenta? <a href="login.html" class="fw-bold">Inicia Sesión</a></p>
-            <a href="index.html" class="text-decoration-none text-muted"><i class="bi bi-arrow-left"></i> Volver al Inicio</a>
+            <a href="index.html" class="text-decoration-none text-muted"><i class="bi bi-arrow-left"></i> Volver al
+                Inicio</a>
         </div>
     </div>
 
@@ -72,4 +77,5 @@
     <script src="js/app.js"></script>
     <script src="js/auth.js"></script>
 </body>
+
 </html>

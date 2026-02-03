@@ -200,7 +200,19 @@ function mostrarFormulario(titulo, campos, onGuardar) {
             if(!c.value) opts = `<option value="" selected disabled>-- Seleccione --</option>` + opts;
             return `<div class="mb-3"><label class="form-label fw-bold">${c.label}</label><select id="input-${c.key}" class="form-select">${opts}</select></div>`;
         }
-        return `<div class="mb-3"><label class="form-label fw-bold">${c.label}</label><input id="input-${c.key}" type="${c.type||'text'}" class="form-control" value="${c.value||''}" placeholder="${c.placeholder||''}"></div>`;
+        
+        // --- AQUÍ ESTÁ EL CAMBIO: Restricciones preventivas ---
+        let extraAttrs = '';
+        // Si definimos longitud máxima, la aplicamos al HTML
+        if (c.maxLength) extraAttrs += ` maxlength="${c.maxLength}"`;
+        // Si definimos solo números, bloqueamos cualquier otra tecla
+        if (c.soloNumeros) extraAttrs += ` oninput="this.value = this.value.replace(/[^0-9]/g, '')"`;
+
+        return `<div class="mb-3">
+                    <label class="form-label fw-bold">${c.label}</label>
+                    <input id="input-${c.key}" type="${c.type||'text'}" class="form-control" 
+                           value="${c.value||''}" placeholder="${c.placeholder||''}" ${extraAttrs}>
+                </div>`;
     }).join('');
 
     let modalHtml = document.createElement('div');
