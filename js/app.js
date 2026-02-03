@@ -243,38 +243,3 @@ function mostrarFormulario(titulo, campos, onGuardar) {
         modal.hide();
     };
 }
-
-async function registrarEnJavaYEnviarCorreo(email, nombre) {
-    mostrarPopup("Procesando", "Creando cuenta...", "info");
-    try {
-        const passTemp = Math.random().toString(36).slice(-8) + "Aa1!";
-        const nuevoUser = { fullName: nombre, userEmail: email, userPassword: passTemp, mobilePhone: "000000000", roleId: 2, isActive: true };
-        
-        const resReg = await fetch(`${API_BASE_URL}/auth/register`, {
-            method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(nuevoUser)
-        });
-
-        if (resReg.ok) {
-            const resMail = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
-                method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ email: email })
-            });
-            
-            if (resMail.ok) {
-                mostrarPopup("¡Bienvenido!", `Cuenta creada. Revisa tu correo <b>${email}</b> para poner tu contraseña.`, "success");
-            } else {
-                mostrarPopup("Aviso", "Cuenta creada, pero falló el envío del correo.", "warning");
-            }
-        } else {
-            mostrarPopup("Error", "No se pudo registrar el usuario.", "error");
-        }
-    } catch(e) { console.error(e); }
-}
-
-function decodificarJwt(token) {
-    const base64Url = token.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
-        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-    }).join(''));
-    return JSON.parse(jsonPayload);
-}
