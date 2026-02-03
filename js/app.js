@@ -40,15 +40,26 @@ function configurarMenuPorRol() {
     const usuario = obtenerUsuario();
     if (!usuario) return;
 
-    // Si es Cliente (Rol 2), ocultamos menús de gestión
+    // Si es Cliente (Rol 2), definimos qué ocultar
     if (usuario.roleId !== 1) {
         const itemsProhibidos = [
-            'nav-users', 'nav-stock', 'nav-rutas', 'nav-logs', 'nav-informes', 'btn-add-order'
+            // --- COMENTAMOS ESTAS LÍNEAS PARA QUE EL CLIENTE VEA EL MENÚ ---
+            // 'nav-users', 
+            // 'nav-stock', 
+            // 'nav-rutas', 
+            // 'nav-logs', 
+            // 'nav-informes', 
+            // -------------------------------------------------------------
+            
+            'btn-add-order' // Esto sí lo ocultamos (botones de acción de admin)
         ];
+
         itemsProhibidos.forEach(id => {
             const el = document.getElementById(id);
             if (el) el.style.display = 'none';
         });
+        
+        // Opcional: Si quieres que vean botones 'admin-only' de las tablas, comenta esto también:
         document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
     }
 }
@@ -192,7 +203,14 @@ async function manejarLoginGoogle(response) {
         const email = datosGoogle.email;
 
         // 1. Preguntar al Backend si existe
-        const res = await fetch(`${API_BASE_URL}/users`);
+        const response = await fetch('http://localhost:8080/api/users', {
+    method: 'GET',
+    headers: {
+        'Content-Type': 'application/json'
+        // Si usas token Bearer manual, déjalo. Si confías en la cookie de Google, borra el Authorization.
+    },
+    credentials: 'include' // <--- AÑADE ESTO para que envíe la cookie de sesión de Google
+});
         let existe = false;
         
         if (res.ok) {

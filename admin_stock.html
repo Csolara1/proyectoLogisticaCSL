@@ -68,7 +68,7 @@
           <div class="search-container">
             <input
               type="text"
-              placeholder="Referencia o almacén..."
+              placeholder="Buscar por referencia o almacén..."
               class="search-input"
             />
             <button class="search-button">Buscar</button>
@@ -76,17 +76,18 @@
         </div>
 
         <div class="table-responsive">
-          <table class="data-table table">
+          <table class="data-table table align-middle">
             <thead>
               <tr>
-                <th class="col-id">ID</th>
-                <th>Cliente</th>
+                <th>Referencia</th>
+                <th>Almacén</th>
                 <th>Cantidad</th>
                 <th>Unidad</th>
                 <th>Acciones</th>
               </tr>
             </thead>
-            <tbody id="tabla-cuerpo-stock"></tbody>
+            <tbody id="tabla-cuerpo-stock">
+                </tbody>
           </table>
         </div>
       </main>
@@ -103,9 +104,10 @@
           window.location.href = 'login.html';
         } else {
           document.body.style.display = 'block';
+          // Esperamos a que todo cargue para iniciar
           document.addEventListener("DOMContentLoaded", () => {
             if(typeof verificarSesion === 'function') verificarSesion();
-            cargarStock(); // <--- Función específica de esta página
+            cargarStock(); 
           });
         }
       })();

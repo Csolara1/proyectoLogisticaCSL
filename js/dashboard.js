@@ -1,341 +1,242 @@
-// js/dashboard.js - VERSIÓN FINAL COMPLETA
+// js/dashboard.js - VERSIÓN CORREGIDA (SIN CRASH)
 
 document.addEventListener("DOMContentLoaded", () => {
-    // 1. Verificación de seguridad al cargar
-    if (typeof verificarSesion === 'function') {
-        verificarSesion();
-    }
-    
     const usuario = obtenerUsuario();
     if (!usuario) {
         window.location.href = 'login.html';
         return;
     }
 
-    // 2. Inicialización según el rol
     if (esAdmin()) {
-        // --- MODO ADMINISTRADOR ---
-        console.log("Iniciando Dashboard: MODO ADMIN");
+        // --- ADMIN ---
+        console.log("Dashboard: ADMIN");
         cargarMetricasAdmin();
         cargarLogsReales();
         inicializarGraficosAdmin();
     } else {
-        // --- MODO CLIENTE ---
-        console.log("Iniciando Dashboard: MODO CLIENTE");
+        // --- CLIENTE ---
+        console.log("Dashboard: CLIENTE");
+        // 1. Primero adaptamos la vista (ocultar cosas)
         adaptarDashboardUsuario(usuario);
+        // 2. Luego cargamos los datos
         cargarMetricasUsuario(usuario);
+        // 3. Finalmente los gráficos
         inicializarGraficosUsuario(usuario);
     }
 });
 
 // ==========================================
-// LÓGICA DE ADMINISTRADOR (Ve todo)
+// FUNCIÓN QUE DABA ERROR (CORREGIDA)
 // ==========================================
+function adaptarDashboardUsuario(u) {
+    // 1. Personalizar Saludo
+    const titulo = document.querySelector('h1');
+    if(titulo) titulo.innerText = `Hola, ${u.fullName}`;
 
-async function cargarMetricasAdmin() {
-    try {
-        // 1. Usuarios Totales
-        const resUsers = await fetch(`${API_BASE_URL}/users`);
-        if (resUsers.ok) {
-            const users = await resUsers.json();
-            animarContador("metric-users", users.length);
+    // 2. Ocultar tarjetas de métricas (Usuarios y Stock)
+    // CORRECCIÓN: Usamos getElementById que es seguro con tu HTML actual
+    
+    // Ocultar tarjeta Usuarios
+    const metricUsers = document.getElementById('metric-users');
+    if (metricUsers) {
+        const card = metricUsers.closest('.metric-card');
+        if (card) card.style.display = 'none';
+    }
+
+    // Ocultar tarjeta Stock
+    const metricStock = document.getElementById('metric-stock');
+    if (metricStock) {
+        const card = metricStock.closest('.metric-card');
+        if (card) card.style.display = 'none';
+    }
+
+    // 3. Ajustar tarjeta Pedidos
+    const metricOrders = document.getElementById('metric-orders');
+    if (metricOrders) {
+        const card = metricOrders.closest('.metric-card');
+        if (card) {
+            // Cambiamos el texto del H3 (Título)
+            const tituloCard = card.querySelector('h3');
+            if (tituloCard) tituloCard.innerText = "Mis Pedidos Activos";
+            card.style.minWidth = "300px"; 
         }
+    }
 
-        // 2. Pedidos Activos (Globales)
-        const resOrders = await fetch(`${API_BASE_URL}/orders`);
-        if (resOrders.ok) {
-            const orders = await resOrders.json();
-            // Contamos como activos los que no están Entregados ni Cancelados
-            const activos = orders.filter(o => 
-                o.status !== 'ENTREGADO' && o.status !== 'CANCELADO'
-            ).length;
+    // 4. Ocultar Gráfico Stock y Centrar Pedidos
+    const colStock = document.getElementById('col-chart-stock');
+    const colPedidos = document.getElementById('col-chart-pedidos');
+
+    if (colStock) colStock.style.display = 'none';
+
+    if (colPedidos) {
+        colPedidos.classList.remove('col-md-6');
+        colPedidos.classList.add('col-md-8', 'offset-md-2');
+    }
+
+    // 5. Ocultar Logs
+    const logsSection = document.querySelector('.dashboard-activity');
+    if(logsSection) logsSection.style.display = 'none';
+}
+
+// ==========================================
+// LÓGICA DE DATOS (CLIENTE)
+// ==========================================
+async function cargarMetricasUsuario(u) {
+    try {
+        const id = u.userId || u.id;
+        const res = await fetch(`${API_BASE_URL}/orders?userId=${id}`);
+        if(res.ok) {
+            const pedidos = await res.json();
+            const activos = pedidos.filter(o => !['ENTREGADO', 'CANCELADO'].includes(o.status)).length;
             animarContador("metric-orders", activos);
         }
+    } catch(e) { console.error(e); }
+}
 
-        // 3. Stock Total
-        const resStock = await fetch(`${API_BASE_URL}/stock`);
-        if (resStock.ok) {
-            const stockItems = await resStock.json();
-            const totalStock = stockItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
-            animarContador("metric-stock", totalStock);
+async function inicializarGraficosUsuario(u) {
+    if (typeof Chart === 'undefined') return;
+
+    try {
+        const id = u.userId || u.id;
+        console.log("Cargando gráfico para usuario ID:", id);
+
+        const res = await fetch(`${API_BASE_URL}/orders?userId=${id}`);
+        
+        if(res.ok) {
+            const misPedidos = await res.json();
+            console.log("Pedidos encontrados:", misPedidos);
+            pintarDonutPedidos(misPedidos, 'chartPedidos');
+        } else {
+            console.error("Error API:", res.status);
         }
-    } catch (error) { 
-        console.error("Error cargando métricas de admin:", error); 
-    }
+    } catch(e) { console.error("Error gráfico:", e); }
+}
+
+// ==========================================
+// LÓGICA DE DATOS (ADMIN)
+// ==========================================
+async function cargarMetricasAdmin() {
+    try {
+        const [resUsers, resOrders, resStock] = await Promise.all([
+            fetch(`${API_BASE_URL}/users`),
+            fetch(`${API_BASE_URL}/orders`),
+            fetch(`${API_BASE_URL}/stock`)
+        ]);
+
+        if (resUsers.ok) animarContador("metric-users", (await resUsers.json()).length);
+        if (resOrders.ok) {
+            const orders = await resOrders.json();
+            const activos = orders.filter(o => !['ENTREGADO', 'CANCELADO'].includes(o.status)).length;
+            animarContador("metric-orders", activos);
+        }
+        if (resStock.ok) {
+            const items = await resStock.json();
+            const total = items.reduce((sum, i) => sum + (i.quantity || 0), 0);
+            animarContador("metric-stock", total);
+        }
+    } catch (e) { console.error(e); }
 }
 
 async function cargarLogsReales() {
     try {
-        const response = await fetch(`${API_BASE_URL}/logs`);
-        if (response.ok) {
-            const logs = await response.json();
-            const logArea = document.querySelector('.log-area');
-            
-            if (!logArea) return;
-
-            // Filtro local: si el admin pulsó "limpiar logs" en su navegador
-            const ultimaLimpieza = localStorage.getItem('csl_logs_cleared_at');
-            let logsFiltrados = logs;
-
-            if (ultimaLimpieza) {
-                const fechaCorte = new Date(ultimaLimpieza);
-                logsFiltrados = logs.filter(log => {
-                    // Normalizamos fecha por si viene con/sin Z
-                    const fechaLog = new Date(log.eventTime.endsWith('Z') ? log.eventTime : log.eventTime + 'Z');
-                    return fechaLog > fechaCorte;
-                });
+        const res = await fetch(`${API_BASE_URL}/logs`);
+        if(res.ok) {
+            const logs = await res.json();
+            const area = document.querySelector('.log-area');
+            if(area && logs.length > 0) {
+                const ultimos = logs.slice(-50).reverse();
+                area.value = ultimos.map(l => `[${new Date(l.eventTime).toLocaleString()}] ${l.logLevel}: ${l.eventMessage}`).join('\n');
             }
-
-            if (logsFiltrados.length === 0) {
-                logArea.value = "Registro de eventos vacío o limpio.";
-                return;
-            }
-
-            // Formateamos el log para que sea legible
-            const textoLogs = logsFiltrados.map(log => {
-                const fechaRaw = log.eventTime.endsWith('Z') ? log.eventTime : log.eventTime + 'Z';
-                const fecha = new Date(fechaRaw).toLocaleString();
-                return `[${fecha}] ${log.logLevel || 'INFO'}: ${log.eventMessage}`;
-            }).join('\n');
-
-            logArea.value = textoLogs;
-            logArea.scrollTop = logArea.scrollHeight; // Auto-scroll al final
         }
-    } catch (e) { 
-        console.error("Error cargando logs:", e); 
-    }
+    } catch(e) { console.error(e); }
 }
 
 async function inicializarGraficosAdmin() {
-    // Si Chart.js no cargó (por error de red o script), evitamos el fallo
     if (typeof Chart === 'undefined') return;
-
     try {
-        // Gráfico 1: Pedidos Globales
         const resOrders = await fetch(`${API_BASE_URL}/orders`);
-        if (resOrders.ok) {
-            const orders = await resOrders.json();
-            pintarDonutPedidos(orders, 'chartPedidos');
-        }
+        if (resOrders.ok) pintarDonutPedidos(await resOrders.json(), 'chartPedidos');
 
-        // Gráfico 2: Stock por Almacén
         const resStock = await fetch(`${API_BASE_URL}/stock`);
-        if (resStock.ok) {
-            const stockItems = await resStock.json();
-            pintarBarrasStock(stockItems, 'chartStock');
-        }
-    } catch(e) { 
-        console.error("Error iniciando gráficos admin:", e); 
-    }
+        if (resStock.ok) pintarBarrasStock(await resStock.json(), 'chartStock');
+    } catch (e) { console.error(e); }
 }
 
-
 // ==========================================
-// LÓGICA DE USUARIO (Solo sus datos)
+// UTILIDADES GRÁFICAS
 // ==========================================
-
-function adaptarDashboardUsuario(usuario) {
-    // 1. Ocultar tarjetas que no le importan (Usuarios y Stock)
-    const cardUsers = document.getElementById('metric-users');
-    if (cardUsers) cardUsers.closest('.metric-card').style.display = 'none';
-
-    const cardStock = document.getElementById('metric-stock');
-    if (cardStock) cardStock.closest('.metric-card').style.display = 'none';
-
-    // 2. Adaptar la tarjeta de "Pedidos" para que sea la principal
-    const cardOrders = document.getElementById('metric-orders');
-    if (cardOrders) {
-        const contenedor = cardOrders.closest('.metric-card');
-        contenedor.querySelector('h3').innerText = "Mis Pedidos en Curso";
-        // Hacemos que ocupe más espacio o se centre si prefieres
-        contenedor.style.width = "100%"; 
-        contenedor.style.maxWidth = "400px";
-    }
-
-    // 3. Ocultar sección de Logs (Privado del sistema)
-    const sectionLogs = document.querySelector('.dashboard-activity');
-    if (sectionLogs) sectionLogs.style.display = 'none';
-
-    // 4. Ocultar Gráfico de Stock (Info interna)
-    const chartStockCanvas = document.getElementById('chartStock');
-    if (chartStockCanvas) {
-        // Subimos hasta encontrar el contenedor padre de la tarjeta del gráfico
-        const cardChartStock = chartStockCanvas.closest('.card');
-        if (cardChartStock) cardChartStock.parentElement.style.display = 'none'; 
-    }
-    
-    // 5. Personalizar el título de bienvenida
-    const tituloPrincipal = document.querySelector('h1');
-    if (tituloPrincipal) tituloPrincipal.innerText = `Hola, ${usuario.fullName}`;
-    
-    const desc = document.querySelector('.section-description');
-    if (desc) desc.innerText = "Bienvenido a tu panel de cliente. Aquí puedes ver el estado de tus envíos.";
-}
-
-async function cargarMetricasUsuario(usuario) {
-    try {
-        // USAMOS EL FILTRO DEL BACKEND: ?userId=...
-        // Esto es mucho más seguro y eficiente que traer todos y filtrar aquí.
-        const id = usuario.userId || usuario.id;
-        const resOrders = await fetch(`${API_BASE_URL}/orders?userId=${id}`);
-        
-        if (resOrders.ok) {
-            const misPedidos = await resOrders.json();
-            
-            // Contamos solo los activos
-            const misActivos = misPedidos.filter(o => 
-                o.status !== 'ENTREGADO' && o.status !== 'CANCELADO'
-            ).length;
-            
-            animarContador("metric-orders", misActivos);
-        }
-    } catch (error) { 
-        console.error("Error métricas usuario:", error); 
-    }
-}
-
-async function inicializarGraficosUsuario(usuario) {
-    if (typeof Chart === 'undefined') return;
-
-    try {
-        const id = usuario.userId || usuario.id;
-        const resOrders = await fetch(`${API_BASE_URL}/orders?userId=${id}`);
-        
-        if (resOrders.ok) {
-            const misPedidos = await resOrders.json();
-            // Pintamos el donut solo con SUS datos
-            pintarDonutPedidos(misPedidos, 'chartPedidos');
-        }
-    } catch(e) { 
-        console.error("Error gráficos usuario:", e); 
-    }
-}
-
-
-// ==========================================
-// UTILIDADES GRÁFICAS (COMPARTIDAS)
-// ==========================================
-
-function pintarDonutPedidos(orders, canvasId) {
-    const canvas = document.getElementById(canvasId);
+function pintarDonutPedidos(orders, idCanvas) {
+    const canvas = document.getElementById(idCanvas);
     if (!canvas) return;
 
-    // Contadores
-    let pendientes = 0, enProceso = 0, enviados = 0, entregados = 0;
-
+    let pendientes = 0, proceso = 0, enviados = 0, entregados = 0, cancelados = 0;
+    
     orders.forEach(o => {
         const st = (o.status || '').toUpperCase();
-        if (st.includes('PENDIENTE')) pendientes++;
-        else if (st.includes('PROCESO') || st.includes('PREPARACION')) enProceso++;
-        else if (st.includes('ENVIADO') || st.includes('TRANSITO') || st.includes('RUTA')) enviados++;
-        else if (st.includes('ENTREGADO')) entregados++;
+        if(st.includes('PENDIENTE')) pendientes++;
+        else if(st.includes('PROCESO')) proceso++;
+        else if(st.includes('ENVIADO') || st.includes('TRANSITO')) enviados++;
+        else if(st.includes('ENTREGADO')) entregados++;
+        else if(st.includes('CANCELADO')) cancelados++;
     });
 
-    // Destruir gráfico anterior si existe para evitar superposiciones
-    if (window.miDonutChart) window.miDonutChart.destroy();
+    const chartInstance = Chart.getChart(idCanvas);
+    if (chartInstance) chartInstance.destroy();
 
-    const ctx = canvas.getContext('2d');
-    window.miDonutChart = new Chart(ctx, {
+    new Chart(canvas, {
         type: 'doughnut',
         data: {
-            labels: ['Pendiente', 'En Proceso', 'Enviado', 'Entregado'],
+            labels: ['Pendiente', 'En Proceso', 'Enviado', 'Entregado', 'Cancelado'],
             datasets: [{
-                data: [pendientes, enProceso, enviados, entregados],
-                backgroundColor: ['#ffc107', '#17a2b8', '#0d6efd', '#198754'],
+                data: [pendientes, proceso, enviados, entregados, cancelados],
+                backgroundColor: ['#ffc107', '#0dcaf0', '#0d6efd', '#198754', '#dc3545'],
                 borderWidth: 2,
                 borderColor: '#ffffff'
             }]
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { position: 'bottom' }
-            }
-        }
-    });
-}
-
-function pintarBarrasStock(stockItems, canvasId) {
-    const canvas = document.getElementById(canvasId);
-    if (!canvas) return;
-
-    // Agrupamos stock por almacén
-    const conteoAlmacen = {}; 
-    // Inicializamos algunos almacenes base para que el gráfico no quede vacío si no hay datos
-    ['MAD-01', 'MAD-02', 'BCN-01', 'VAL-01'].forEach(a => conteoAlmacen[a] = 0);
-
-    stockItems.forEach(item => {
-        const wh = item.warehouse || 'OTROS';
-        conteoAlmacen[wh] = (conteoAlmacen[wh] || 0) + (item.quantity || 0);
-    });
-
-    if (window.miBarChart) window.miBarChart.destroy();
-
-    const ctx = canvas.getContext('2d');
-    window.miBarChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: Object.keys(conteoAlmacen),
-            datasets: [{
-                label: 'Unidades Disponibles',
-                data: Object.values(conteoAlmacen),
-                backgroundColor: '#5e35b1',
-                borderRadius: 5
-            }]
-        },
-        options: {
+        options: { 
             responsive: true, 
             maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: { 
-                y: { beginAtZero: true }, 
-                x: { grid: { display: false } } 
-            }
+            plugins: { legend: { position: 'bottom' } }
         }
     });
 }
 
-// ==========================================
-// UTILIDADES (Logs y Animación)
-// ==========================================
+function pintarBarrasStock(items, idCanvas) {
+    const canvas = document.getElementById(idCanvas);
+    if (!canvas) return;
 
-function animarContador(idElemento, valorFinal) {
-    const elemento = document.getElementById(idElemento);
-    if (!elemento) return;
-    
-    // Si el valor es 0, lo ponemos directo
-    if (!valorFinal || valorFinal === 0) { 
-        elemento.innerText = "0"; 
-        return; 
-    }
+    const almacen = {};
+    items.forEach(i => {
+        const wh = i.warehouse || 'General';
+        almacen[wh] = (almacen[wh] || 0) + (i.quantity || 0);
+    });
 
-    let valorActual = 0;
-    // Calculamos un incremento para que la animación dure aprox lo mismo siempre
-    const incremento = Math.ceil(valorFinal / 30) || 1; 
-    
-    const intervalo = setInterval(() => {
-        valorActual += incremento;
-        if (valorActual >= valorFinal) {
-            valorActual = valorFinal;
-            clearInterval(intervalo);
-        }
-        elemento.innerText = valorActual;
-    }, 30); 
+    const chartInstance = Chart.getChart(idCanvas);
+    if (chartInstance) chartInstance.destroy();
+
+    new Chart(canvas, {
+        type: 'bar',
+        data: {
+            labels: Object.keys(almacen),
+            datasets: [{
+                label: 'Stock Total',
+                data: Object.values(almacen),
+                backgroundColor: '#6610f2'
+            }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+    });
 }
 
-function borrarLogs() {
-    // Esta función se puede vincular a un botón "Limpiar Logs" en el HTML del admin
-    const ahora = new Date().toISOString();
-    localStorage.setItem('csl_logs_cleared_at', ahora);
-    
-    const logArea = document.querySelector('.log-area');
-    if (logArea) logArea.value = "Registro de eventos vacío.";
-    
-    // Si usas el sistema de popups de app.js:
-    if (typeof mostrarPopup === 'function') {
-        mostrarPopup("Historial", "Logs limpiados de la vista local.", "success");
-    } else {
-        alert("Logs limpiados.");
-    }
+function animarContador(id, final) {
+    const el = document.getElementById(id);
+    if(!el) return;
+    let actual = 0;
+    const step = Math.ceil(final / 20) || 1;
+    const t = setInterval(() => {
+        actual += step;
+        if(actual >= final) { actual = final; clearInterval(t); }
+        el.innerText = actual;
+    }, 30);
 }
