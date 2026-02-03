@@ -244,45 +244,6 @@ function mostrarFormulario(titulo, campos, onGuardar) {
     };
 }
 
-// --- LOGIN GOOGLE (CORREGIDO) ---
-async function manejarLoginGoogle(response) {
-    try {
-        const datosGoogle = decodificarJwt(response.credential);
-        const email = datosGoogle.email;
-
-        // 1. Preguntar al Backend si existe
-        const res = await fetch('http://localhost:8080/api/users', { // Guardamos en 'res'
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include'
-        });
-        
-        let existe = false;
-        
-        // ¡OJO AQUÍ! Usamos 'res' que es la variable definida arriba
-        if (res.ok) { 
-            const usuarios = await res.json();
-            const usuarioEncontrado = usuarios.find(u => u.userEmail === email || u.email === email);
-            
-            if (usuarioEncontrado) {
-                // YA EXISTE -> Login directo
-                localStorage.setItem('usuario_csl', JSON.stringify(usuarioEncontrado));
-                window.location.href = 'admin_dashboard.html';
-                existe = true;
-            }
-        }
-
-        // 2. Si NO existe -> Registro automático
-        if (!existe) {
-            registrarEnJavaYEnviarCorreo(email, datosGoogle.name);
-        }
-
-    } catch (error) {
-        console.error("Error Google:", error);
-        mostrarPopup("Error", "Fallo de conexión con el servidor.", "error");
-    }
-}
-
 async function registrarEnJavaYEnviarCorreo(email, nombre) {
     mostrarPopup("Procesando", "Creando cuenta...", "info");
     try {
