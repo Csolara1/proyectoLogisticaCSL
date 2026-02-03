@@ -1,7 +1,7 @@
 // js/app.js - VERSIÓN CORREGIDA Y UNIFICADA
 
 // ⚠️ IMPORTANTE: Para local usamos la URL completa
-const API_BASE_URL = 'https://controlsystemlogistics.com/api';
+const API_BASE_URL = 'https://controlsystemlogistic.com/api';
 
 // LISTA CENTRALIZADA DE PÁGINAS PÚBLICAS (Para no tener duplicados)
 const PAGINAS_PUBLICAS = [
