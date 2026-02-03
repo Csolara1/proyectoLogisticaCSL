@@ -1,7 +1,22 @@
-// js/app.js - VERSIÓN LOCALHOST CORREGIDA
+// js/app.js - VERSIÓN CORREGIDA Y UNIFICADA
 
 // ⚠️ IMPORTANTE: Para local usamos la URL completa
 const API_BASE_URL = 'http://localhost:8080/api'; 
+
+// LISTA CENTRALIZADA DE PÁGINAS PÚBLICAS (Para no tener duplicados)
+const PAGINAS_PUBLICAS = [
+    'login.html', 
+    'register.html', 
+    'index.html', 
+    'forgot_password.html', 
+    'reset_password.html', 
+    'complete_profile.html', // <--- ¡AÑADIR ESTA LÍNEA ES OBLIGATORIO!
+    'aviso_legal.html',
+    'politica_privacidad.html',
+    'contacto.html',
+    'servicios.html',
+    'presupuesto.html'
+];
 
 document.addEventListener('DOMContentLoaded', () => {
     configurarMenuPorRol();
@@ -15,20 +30,45 @@ function obtenerUsuario() {
     return userStr ? JSON.parse(userStr) : null;
 }
 
+// 1. PROTECCIÓN INMEDIATA (Se ejecuta antes de cargar el HTML)
+(function protegerRutas() {
+    const rutaActual = window.location.pathname;
+    const usuario = obtenerUsuario();
+
+    // Verificamos si la ruta actual coincide con alguna pública
+    const esPublica = PAGINAS_PUBLICAS.some(pag => rutaActual.includes(pag));
+
+    // REGLA: Si NO es pública y NO tengo usuario -> AL LOGIN
+    if (!esPublica && !usuario) {
+        console.warn("Acceso no autorizado. Redirigiendo al login...");
+        window.location.href = 'login.html';
+    }
+
+    // REGLA OPCIONAL: Si YA tengo usuario y voy al login -> AL DASHBOARD
+    if ((rutaActual.includes('login.html') || rutaActual.includes('register.html')) && usuario) {
+        window.location.href = 'admin_dashboard.html';
+    }
+})();
+
 function esAdmin() {
     const user = obtenerUsuario();
     return user && user.roleId === 1;
 }
 
+// 2. VERIFICACIÓN VISUAL (Se ejecuta al cargar el HTML)
 function verificarSesionEnPagina() {
-    const path = window.location.pathname;
-    // Páginas públicas que no requieren login
-    if (path.includes('login') || path.includes('register') || path.includes('forgot') || path.includes('index') || path.includes('contacto')) return;
+    const rutaActual = window.location.pathname;
+    
+    // Usamos la MISMA lista para saber si saltarnos la comprobación
+    const esPublica = PAGINAS_PUBLICAS.some(pag => rutaActual.includes(pag));
+    
+    if (esPublica) return; // Si es pública, no hacemos nada más
 
     const usuario = obtenerUsuario();
     if (!usuario) {
         window.location.href = 'login.html';
     } else {
+        // Actualizamos el nombre en la barra superior
         const nombreSpan = document.getElementById('session-username');
         if (nombreSpan) {
             nombreSpan.innerText = (usuario.roleId === 1 ? "Admin: " : "Cliente: ") + usuario.fullName;
@@ -43,15 +83,7 @@ function configurarMenuPorRol() {
     // Si es Cliente (Rol 2), definimos qué ocultar
     if (usuario.roleId !== 1) {
         const itemsProhibidos = [
-            // --- COMENTAMOS ESTAS LÍNEAS PARA QUE EL CLIENTE VEA EL MENÚ ---
-            // 'nav-users', 
-            // 'nav-stock', 
-            // 'nav-rutas', 
-            // 'nav-logs', 
-            // 'nav-informes', 
-            // -------------------------------------------------------------
-            
-            'btn-add-order' // Esto sí lo ocultamos (botones de acción de admin)
+            'btn-add-order' // Ocultamos botones de acción de admin
         ];
 
         itemsProhibidos.forEach(id => {
@@ -59,7 +91,6 @@ function configurarMenuPorRol() {
             if (el) el.style.display = 'none';
         });
         
-        // Opcional: Si quieres que vean botones 'admin-only' de las tablas, comenta esto también:
         document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
     }
 }
@@ -73,8 +104,10 @@ function logout() {
 
 function cerrarModalesYBackdrop() {
     document.querySelectorAll('.modal.show').forEach(m => {
-        const instance = bootstrap.Modal.getInstance(m);
-        if (instance) instance.hide();
+        try {
+            const instance = bootstrap.Modal.getInstance(m);
+            if (instance) instance.hide();
+        } catch(e) { m.classList.remove('show'); }
     });
     document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
     document.body.classList.remove('modal-open');
@@ -133,12 +166,12 @@ function mostrarConfirmacionSegura(titulo, mensaje, palabraClave, accionConfirma
                 </div>
                 <div class="modal-body">
                     <p>${mensaje}</p>
-                    <p class="mb-1">Escribe: <strong>${palabraClave}</strong></p>
-                    <input type="text" id="input-verificacion" class="form-control" autocomplete="off">
+                    ${palabraClave ? `<p class="mb-1">Escribe: <strong>${palabraClave}</strong></p>
+                    <input type="text" id="input-verificacion" class="form-control" autocomplete="off">` : ''}
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" id="btn-borrado-final" class="btn btn-danger" disabled>Confirmar</button>
+                    <button type="button" id="btn-borrado-final" class="btn btn-danger" ${palabraClave ? 'disabled' : ''}>Confirmar</button>
                 </div>
             </div>
         </div>`;
@@ -146,9 +179,13 @@ function mostrarConfirmacionSegura(titulo, mensaje, palabraClave, accionConfirma
     const modal = new bootstrap.Modal(modalHtml);
     modal.show();
 
-    const input = document.getElementById('input-verificacion');
     const btn = document.getElementById('btn-borrado-final');
-    input.addEventListener('input', () => btn.disabled = (input.value !== palabraClave));
+    
+    if (palabraClave) {
+        const input = document.getElementById('input-verificacion');
+        input.addEventListener('input', () => btn.disabled = (input.value !== palabraClave));
+    }
+    
     btn.onclick = () => { accionConfirmada(); modal.hide(); };
 }
 
@@ -195,25 +232,23 @@ function mostrarFormulario(titulo, campos, onGuardar) {
     };
 }
 
-// --- LOGIN GOOGLE (CONECTADO AL BACKEND) ---
-
+// --- LOGIN GOOGLE (CORREGIDO) ---
 async function manejarLoginGoogle(response) {
     try {
         const datosGoogle = decodificarJwt(response.credential);
         const email = datosGoogle.email;
 
         // 1. Preguntar al Backend si existe
-        const response = await fetch('http://localhost:8080/api/users', {
-    method: 'GET',
-    headers: {
-        'Content-Type': 'application/json'
-        // Si usas token Bearer manual, déjalo. Si confías en la cookie de Google, borra el Authorization.
-    },
-    credentials: 'include' // <--- AÑADE ESTO para que envíe la cookie de sesión de Google
-});
+        const res = await fetch('http://localhost:8080/api/users', { // Guardamos en 'res'
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include'
+        });
+        
         let existe = false;
         
-        if (res.ok) {
+        // ¡OJO AQUÍ! Usamos 'res' que es la variable definida arriba
+        if (res.ok) { 
             const usuarios = await res.json();
             const usuarioEncontrado = usuarios.find(u => u.userEmail === email || u.email === email);
             
@@ -239,7 +274,6 @@ async function manejarLoginGoogle(response) {
 async function registrarEnJavaYEnviarCorreo(email, nombre) {
     mostrarPopup("Procesando", "Creando cuenta...", "info");
     try {
-        // Registro en API
         const passTemp = Math.random().toString(36).slice(-8) + "Aa1!";
         const nuevoUser = { fullName: nombre, userEmail: email, userPassword: passTemp, mobilePhone: "000000000", roleId: 2, isActive: true };
         
@@ -248,7 +282,6 @@ async function registrarEnJavaYEnviarCorreo(email, nombre) {
         });
 
         if (resReg.ok) {
-            // Pedir correo de activación
             const resMail = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
                 method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ email: email })
             });

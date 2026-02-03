@@ -252,39 +252,53 @@ async function solicitarRecuperacion() {
 // No tocamos nada de arriba, solo añadimos esto al final.
 
 // --- LOGIN CON GOOGLE ---
-window.manejarLoginGoogle = async function(response) {
+async function manejarLoginGoogle(response) {
     try {
-        console.log("Procesando Google Login...");
-        
-        const tokenGoogle = response.credential;
-
+        // Enviamos el token directamente al Backend
         const res = await fetch(`${API_BASE_URL}/auth/google`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token: tokenGoogle })
+            body: JSON.stringify({ token: response.credential })
         });
 
         if (res.ok) {
             const data = await res.json();
-            
+
+            // 🛑 AQUÍ ESTÁ EL FIX: COMPROBAR EL TIPO DE RESPUESTA
+            // Si el backend nos dice que es un usuario nuevo, NO logueamos.
+            if (data.status === "NEW_USER_EMAIL_SENT") {
+                mostrarPopup("¡Casi listo!", 
+                    `<div class="text-center">
+                        <i class="bi bi-envelope-paper text-primary" style="font-size:3rem;"></i>
+                        <p class="mt-2">Es tu primera vez aquí.</p>
+                        <p>Hemos enviado un correo a tu cuenta para que <b>completes tu perfil</b>.</p>
+                    </div>`, 
+                    "success"
+                );
+                return; // <--- IMPORTANTE: DETENER LA EJECUCIÓN AQUÍ
+            }
+
+            // Si llegamos aquí, es un Login Normal (data trae userId, fullName, etc.)
             localStorage.setItem('usuario_csl', JSON.stringify(data));
             
-            mostrarPopup("¡Bienvenido!", `Hola, ${data.fullName}`, "success");
+            mostrarPopup("¡Bienvenido!", `Hola de nuevo, ${data.fullName || 'Usuario'}`, "success");
             
-            // 🛑 AQUÍ ESTABA EL PROBLEMA:
-            // Antes tenías un 'if (data.roleId === 1)...'
-            // AHORA REDIRIGIMOS A TODOS AL DASHBOARD:
             setTimeout(() => {
                 window.location.href = 'admin_dashboard.html';
             }, 1500);
 
         } else {
+            // Si el backend devuelve error (400, 401, etc.)
             const errorTxt = await res.text();
-            console.error("Error backend:", errorTxt);
-            mostrarPopup("Error Google", "No se pudo validar la cuenta.", "error");
+            
+            if (errorTxt.includes("inactiva")) {
+                mostrarPopup("Cuenta Inactiva", "Tu cuenta existe pero no has completado el registro. Revisa tu correo.", "warning");
+            } else {
+                mostrarPopup("Error de Acceso", "No se pudo iniciar sesión con Google.", "error");
+            }
         }
     } catch (error) {
-        console.error(error);
-        mostrarPopup("Error de conexión", "Fallo al conectar con el servidor.", "error");
+        console.error("Error Google:", error);
+        mostrarPopup("Error", "Fallo de conexión con el servidor.", "error");
     }
-};
+}
